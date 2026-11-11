@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA meta tags para convertir en app independiente -->
+    <meta name="theme-color" content="#16a34a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MenúFácil Pro">
+    <title>MenúFácil Pro - Planificador Inteligente con Sincronización en la Nube</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- Notificación flotante para mensajes -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center space-x-3 text-sm font-medium">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toast-message">Acción realizada correctamente</span>
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-md shadow-emerald-600/20">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight text-slate-900">MenúFácil<span class="text-emerald-600 font-light">Pro</span></h1>
+                    <p class="text-xs text-slate-500">Sincronizado en la nube en tiempo real</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div id="cloud-sync-status" class="hidden sm:flex items-center space-x-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                    <i class="fa-solid fa-cloud-arrow-up text-emerald-600 animate-pulse"></i>
+                    <span id="cloud-status-text">Conectado a la nube</span>
+                </div>
+                <button onclick="app.openMobileGuide()" class="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-xl transition cursor-pointer flex items-center shadow-xs">
+                    <i class="fa-solid fa-mobile-screen-button mr-1.5"></i> Usar en Móvil
+                </button>
+                <button onclick="app.resetConfig()" class="text-xs font-medium text-slate-600 hover:text-emerald-600 bg-slate-100 hover:bg-emerald-50 px-3 py-2 rounded-xl transition cursor-pointer hidden sm:inline-flex">
+                    <i class="fa-solid fa-gear mr-1"></i> Configuración
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- VISTA 1: WIZARD DE CONFIGURACIÓN POR PASOS -->
+        <section id="view-config" class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-6 sm:p-10 mb-12">
+            
+            <!-- Barra de Progreso de Pasos -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
+                    <span id="step-indicator-label">Paso 1 de 5</span>
+                    <span id="step-name-label" class="text-emerald-600">Supermercados</span>
+                </div>
+                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div id="step-progress-bar" class="bg-emerald-600 h-full transition-all duration-300 w-1/5"></div>
+                </div>
+            </div>
+
+            <!-- FORMULARIO MULTIPÁGINA -->
+            <div id="wizard-form-container">
+
+                <!-- PASO 1: SUPERMERCADOS -->
+                <div class="wizard-step space-y-6" data-step="1">
+                    <div class="text-center mb-6">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Zona de Compra</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-2">¿En qué supermercados sueles comprar?</h2>
+                        <p class="text-slate-500 text-sm mt-1">Pulsa sobre cualquier tarjeta para marcarla. Selecciona al menos uno.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="supermarkets-container">
+                        <!-- Inyectado por JS con interacción táctil completa -->
+                    </div>
+
+                    <div class="flex items-center space-x-2 pt-2">
+                        <input type="text" id="custom-supermarket" placeholder="Añadir otro súper manualmente..." class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button type="button" onclick="app.addCustomSupermarket()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-3 rounded-xl text-xs font-medium transition cursor-pointer shrink-0">Añadir</button>
+                    </div>
+                </div>
+
+                <!-- PASO 2: PERSONAS Y PRESUPUESTO -->
+                <div class="wizard-step space-y-6 hidden" data-step="2">
+                    <div class="text-center mb-6">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Comensales y Límite</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-2">¿Para cuántos y con qué presupuesto?</h2>
+                        <p class="text-slate-500 text-sm mt-1">Ajustaremos raciones y recetas para no superar tu límite en euros.</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-900">
+                                <i class="fa-solid fa-users text-emerald-600 mr-2"></i>Número de comensales
+                            </label>
+                            <div class="flex items-center space-x-4 bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                                <button type="button" onclick="app.adjustPeople(-1)" class="w-12 h-12 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center justify-center font-bold hover:bg-slate-100 transition shadow-xs cursor-pointer text-lg">-</button>
+                                <span id="people-count-display" class="flex-1 text-center font-bold text-base text-slate-800">1 persona</span>
+                                <button type="button" onclick="app.adjustPeople(1)" class="w-12 h-12 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center justify-center font-bold hover:bg-slate-100 transition shadow-xs cursor-pointer text-lg">+</button>
+                                <input type="hidden" id="people-count" value="1">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-900">
+                                <i class="fa-solid fa-wallet text-emerald-600 mr-2"></i>Presupuesto máximo (€)
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 font-medium">€</span>
+                                <input type="number" id="budget" value="70" min="15" max="300" class="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-8 pr-4 py-3.5 text-sm font-bold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PASO 3: DÍAS Y COMIDAS -->
+                <div class="wizard-step space-y-6 hidden" data-step="3">
+                    <div class="text-center mb-6">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Calendario</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-2">¿Qué días y comidas quieres planificar?</h2>
+                        <p class="text-slate-500 text-sm mt-1">Pulsa sobre las tarjetas para marcar comidas, cenas y días de la semana.</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <label class="block text-sm font-semibold text-slate-900">Tipos de comida</label>
+                        <div class="grid grid-cols-2 gap-3" id="meals-container">
+                            <!-- Inyectado por JS -->
+                        </div>
+
+                        <label class="block text-sm font-semibold text-slate-900 pt-3">Días de la semana</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="days-container">
+                            <!-- Inyectado por JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PASO 4: ESTILOS, DIETA Y ALERGIAS -->
+                <div class="wizard-step space-y-6 hidden" data-step="4">
+                    <div class="text-center mb-6">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Preferencias Nutricionales</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-2">Estilos, Dieta y Alergias</h2>
+                        <p class="text-slate-500 text-sm mt-1">Selecciona tocando las tarjetas de estilos y alergias que prefieras.</p>
+                    </div>
+
+                    <div class="space-y-5">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-900">Estilos de comida deseados (Selección múltiple)</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5" id="styles-container">
+                                <!-- Inyectado por JS -->
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-slate-900">Tipo de Dieta</label>
+                                <select id="diet-select" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="none">Ninguna (Dieta variada)</option>
+                                    <option value="vegan">Vegano</option>
+                                    <option value="vegetarian">Vegetariano</option>
+                                    <option value="no-pork">Sin cerdo</option>
+                                    <option value="keto">Keto / Low Carb</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-slate-900">Alergias / Intolerancias</label>
+                                <div class="grid grid-cols-2 gap-2 text-xs" id="allergies-container">
+                                    <!-- Inyectado por JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PASO 5: EQUIPAMIENTO DE COCINA -->
+                <div class="wizard-step space-y-6 hidden" data-step="5">
+                    <div class="text-center mb-6">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Electrodomésticos</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-2">¿Qué equipamiento tienes disponible?</h2>
+                        <p class="text-slate-500 text-sm mt-1">Pulsa sobre tus aparatos de cocina para seleccionarlos.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="equipment-container">
+                        <!-- Inyectado por JS -->
+                    </div>
+                </div>
+
+                <!-- BOTONES DE NAVEGACIÓN DEL WIZARD -->
+                <div class="flex items-center justify-between pt-8 border-t border-slate-100 mt-8">
+                    <button type="button" id="btn-prev" onclick="app.prevStep()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3.5 rounded-2xl text-xs font-bold transition cursor-pointer hidden">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Anterior
+                    </button>
+                    <div class="ml-auto">
+                        <button type="button" id="btn-next" onclick="app.nextStep()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-emerald-600/30 transition text-xs cursor-pointer flex items-center">
+                            <span>Continuar</span>
+                            <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                        <button type="button" id="btn-submit" onclick="app.generatePlan(event)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-emerald-600/30 transition text-xs cursor-pointer items-center hidden">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2 text-base"></i>
+                            <span>Generar Plan y Compra</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- VISTA 2: RESULTADOS Y PESTAÑAS -->
+        <section id="view-results" class="hidden space-y-6">
+            
+            <!-- Resumen superior / Barra de navegación de pestañas -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white rounded-3xl p-6 shadow-xs border border-slate-200 gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xl">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-900">Menú Optimizado a tu Presupuesto</h3>
+                        <p class="text-xs text-slate-500" id="plan-subtitle">Generado para 1 persona • Cesta dentro del límite</p>
+                    </div>
+                </div>
+
+                <!-- Pestañas -->
+                <div class="flex bg-slate-100 p-1.5 rounded-2xl w-full sm:w-auto">
+                    <button onclick="app.switchTab('menu')" id="tab-btn-menu" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-semibold text-xs transition bg-white text-slate-900 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-utensils mr-2 text-emerald-600"></i> Menú & Recetas
+                    </button>
+                    <button onclick="app.switchTab('shopping')" id="tab-btn-shopping" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-semibold text-xs transition text-slate-600 hover:text-slate-900 cursor-pointer">
+                        <i class="fa-solid fa-basket-shopping mr-2 text-emerald-600"></i> Lista de la Compra
+                    </button>
+                </div>
+            </div>
+
+            <!-- CONTENIDO PESTAÑA 1: MENÚ Y RECETAS -->
+            <div id="tab-content-menu" class="space-y-6">
+                <!-- Alertas / Estado de presupuesto -->
+                <div id="budget-alert-box" class="bg-emerald-50 border border-emerald-200 rounded-3xl p-5 flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-emerald-600 text-white rounded-2xl flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-piggy-bank"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-emerald-900">Control de Gasto Estricto Activo</h4>
+                            <p class="text-xs text-emerald-700" id="budget-summary-text">La cesta total se ha recalculado y escalado para no superar tu límite.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white px-4 py-2 rounded-2xl border border-emerald-200 shadow-xs text-xs font-bold text-emerald-800" id="budget-badge-pill">
+                        Presupuesto respetado con éxito
+                    </div>
+                </div>
+
+                <!-- Contenedor de días del menú -->
+                <div id="menu-days-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Inyectado por JS -->
+                </div>
+            </div>
+
+            <!-- CONTENIDO PESTAÑA 2: LISTA DE LA COMPRA -->
+            <div id="tab-content-shopping" class="hidden space-y-6">
+                
+                <!-- Comparador de precios y Supermercado principal -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs md:col-span-2">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-bold text-base text-slate-900"><i class="fa-solid fa-store text-emerald-600 mr-2"></i>Comparador de Supermercados</h4>
+                            <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-1 rounded-full">Ahorro Máximo</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-4">Hemos comparado los productos entre tus súper preferidos para garantizar el coste más bajo.</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="supermarket-comparison-cards">
+                            <!-- Inyectado por JS -->
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-600 text-white rounded-3xl p-6 shadow-lg shadow-emerald-600/20 flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider font-semibold opacity-80">Total Cesta Optimizada</span>
+                            <h3 class="text-3xl font-extrabold mt-1" id="shopping-total-price">0.00 €</h3>
+                            <p class="text-xs text-emerald-100 mt-2" id="shopping-items-count">0 de 0 productos comprados</p>
+                        </div>
+                        <div class="pt-6">
+                            <button onclick="app.resetShoppingChecks()" class="w-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition cursor-pointer">
+                                Reiniciar checks
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categorías de la compra -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-lg text-slate-900"><i class="fa-solid fa-basket-shopping text-emerald-600 mr-2"></i>Lista agrupada por secciones</h4>
+                        <span class="text-xs text-slate-400">Marca los productos a medida que los cojas en el súper</span>
+                    </div>
+
+                    <div id="shopping-categories-container" class="space-y-6">
+                        <!-- Inyectado por JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón flotante volver a editar -->
+            <div class="text-center pt-6">
+                <button onclick="app.showConfigView()" class="inline-flex items-center space-x-2 text-xs font-semibold bg-slate-200 hover:bg-slate-300 text-slate-700 px-5 py-3 rounded-2xl transition cursor-pointer">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                    <span>Modificar preferencias y regenerar menú</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL DETALLE RECETA -->
+    <div id="recipe-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 p-6 sm:p-8 relative">
+            <button onclick="app.closeRecipeModal()" class="absolute top-6 right-6 w-9 h-9 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600 transition cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="modal-recipe-content" class="space-y-6">
+                <!-- Inyectado dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GUÍA MÓVIL / PWA -->
+    <div id="mobile-guide-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 p-6 sm:p-8 relative space-y-4">
+            <button onclick="app.closeMobileGuide()" class="absolute top-6 right-6 w-9 h-9 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600 transition cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center font-bold text-xl">
+                <i class="fa-solid fa-mobile-screen"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900">Cómo usar MenúFácil Pro como App en tu Móvil</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">Puedes llevar esta aplicación en tu teléfono como si fuera una app nativa descargada de la tienda, sin ocupar espacio y con acceso directo:</p>
+            
+            <div class="space-y-3 pt-2">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">
+                    <h4 class="font-bold text-xs text-slate-900"><i class="fa-brands fa-apple text-slate-800 mr-1.5"></i> Si usas iPhone (Safari):</h4>
+                    <p class="text-[11px] text-slate-600">Pulsa el botón de <strong>Compartir</strong> (el cuadrado con la flecha hacia arriba) en la barra inferior de Safari y selecciona <strong>"Añadir a la pantalla de inicio"</strong>.</p>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">
+                    <h4 class="font-bold text-xs text-slate-900"><i class="fa-brands fa-android text-emerald-600 mr-1.5"></i> Si usas Android (Chrome):</h4>
+                    <p class="text-[11px] text-slate-600">Pulsa los <strong>tres puntos</strong> de la esquina superior derecha del navegador y selecciona <strong>"Instalar aplicación"</strong> o <strong>"Añadir a la pantalla principal"</strong>.</p>
+                </div>
+            </div>
+
+            <div class="pt-2 text-center">
+                <button onclick="app.closeMobileGuide()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-2xl text-xs transition cursor-pointer">
+                    Entendido, ¡gracias!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE & APP SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Inicialización de Firebase
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'menufacil-pro-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "mock", projectId: "mock" };
+
+        let db, auth, userId = null;
+
+        try {
+            const firebaseApp = initializeApp(firebaseConfig);
+            auth = getAuth(firebaseApp);
+            db = getFirestore(firebaseApp);
+
+            const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            if (token) {
+                await signInWithCustomToken(auth, token);
+            } else {
+                await signInAnonymously(auth);
+            }
+            // Creamos un ID de sesión único y privado para cada dispositivo/usuario nuevo
+            userId = auth.currentUser?.uid || crypto.randomUUID();
+            document.getElementById('cloud-status-text').innerText = "Privado y Seguro";
+            
+            // Cada dispositivo empieza totalmente limpio (en cero) por privacidad
+        } catch (e) {
+            console.warn("Modo local activo:", e);
+            userId = crypto.randomUUID();
+            document.getElementById('cloud-status-text').innerText = "Modo Local";
+        }
+
+        async function saveToCloud() {
+            if (!db || !userId) return;
+            try {
+                // Almacenamiento privado y aislado por cada usuario/dispositivo
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'user_data', 'state');
+                await setDoc(docRef, {
+                    appState: appState,
+                    updatedAt: new Date().toISOString()
+                });
+            } catch (err) {
+                console.error("Error guardando en la nube:", err);
+            }
+        }
+
+        window.saveToCloud = saveToCloud;
+    </script>
+
+    <script>
+        // --- BASE DE DATOS DE RECETAS CON COSTES BASE ECONÓMICOS ---
+        const RECIPES_DB = [
+            {
+                id: 1,
+                name: "Pechuga de pollo a la plancha con puré de patata casero",
+                category: "lunch",
+                styles: ["proteico", "sano", "express", "economico"],
+                diet: ["none", "no-pork", "gluten-free"],
+                allergens: [],
+                equipment: ["fuego", "batidora"],
+                time: 20,
+                calories: 450,
+                image: "https://placehold.co/600x400/dcfce7/15803d?text=Pollo+con+Pure",
+                description: "Una receta clásica, ligera y rica en proteínas de alta calidad con un puré cremoso.",
+                ingredients: [
+                    { name: "Pechuga de pollo", baseQty: 220, unit: "g", category: "Carnicería", pricePerKg: 7.5 },
+                    { name: "Patatas", baseQty: 350, unit: "g", category: "Frutería", pricePerKg: 1.4 },
+                    { name: "Leche semidesnatada", baseQty: 80, unit: "ml", category: "Lácteos", pricePerKg: 0.9 },
+                    { name: "Aceite de oliva", baseQty: 15, unit: "ml", category: "Despensa", pricePerKg: 8.0 }
+                ],
+                steps: [
+                    "Pelar y trocear las patatas. Cocerlas en agua hirviendo con sal durante 15 minutos hasta que estén tiernas.",
+                    "Escurrir las patatas y machacarlas con un tenedor o pasapurés añadiendo un chorrito de leche y aceite.",
+                    "Marcar la pechuga de pollo en una sartén caliente con unas gotas de aceite hasta que esté dorada.",
+                    "Servir caliente acompañado del puré de patata casero."
+                ]
+            },
+            {
+                id: 2,
+                name: "Salmón al horno con verduras asadas",
+                category: "dinner",
+                styles: ["proteico", "sano", "bajo-calorias"],
+                diet: ["none", "no-pork", "gluten-free"],
+                allergens: ["marisco"],
+                equipment: ["horno"],
+                time: 25,
+                calories: 520,
+                image: "https://placehold.co/600x400/e0f2fe/0369a1?text=Salmon+con+Verduras",
+                description: "Lomo de salmón jugoso al horno con una selección de calabacín y pimiento.",
+                ingredients: [
+                    { name: "Lomos de salmón", baseQty: 250, unit: "g", category: "Pescadería", pricePerKg: 14.5 },
+                    { name: "Calabacín", baseQty: 180, unit: "g", category: "Frutería", pricePerKg: 2.2 },
+                    { name: "Pimiento rojo", baseQty: 120, unit: "g", category: "Frutería", pricePerKg: 2.8 },
+                    { name: "Aceite de oliva virgen extra", baseQty: 20, unit: "ml", category: "Despensa", pricePerKg: 8.0 }
+                ],
+                steps: [
+                    "Precalentar el horno a 200°C.",
+                    "Cortar el calabacín y el pimiento en tiras y colocarlas en una bandeja de horno con aceite y sal.",
+                    "Colocar los lomos de salmón encima de las verduras, salpimentar y hornear 18-20 minutos."
+                ]
+            },
+            {
+                id: 3,
+                name: "Ensalada completa de garbanzos y atún",
+                category: "lunch",
+                styles: ["sano", "express", "bajo-calorias", "economico"],
+                diet: ["none", "no-pork", "vegetarian", "gluten-free"],
+                allergens: [],
+                equipment: [],
+                time: 10,
+                calories: 380,
+                image: "https://placehold.co/600x400/fef3c7/b45309?text=Ensalada+Garbanzos",
+                description: "Una ensalada fresca, nutritiva y muy económica.",
+                ingredients: [
+                    { name: "Garbanzos cocidos (bote)", baseQty: 380, unit: "g", category: "Despensa", pricePerKg: 2.1 },
+                    { name: "Atún en lata", baseQty: 140, unit: "g", category: "Despensa", pricePerKg: 9.0 },
+                    { name: "Tomate pera", baseQty: 180, unit: "g", category: "Frutería", pricePerKg: 2.0 },
+                    { name: "Cebolla morada", baseQty: 60, unit: "g", category: "Frutería", pricePerKg: 1.8 }
+                ],
+                steps: [
+                    "Enjuagar bien los garbanzos cocidos bajo el grifo.",
+                    "Picar el tomate y la cebolla morada.",
+                    "Mezclar todo en un bol junto con el atún escurrido y aliñar al gusto."
+                ]
+            },
+            {
+                id: 4,
+                name: "Tacos de pollo crujientes en Airfryer",
+                category: "dinner",
+                styles: ["express", "tradicional", "proteico"],
+                diet: ["none", "no-pork"],
+                allergens: ["gluten"],
+                equipment: ["airfryer", "fuego"],
+                time: 15,
+                calories: 490,
+                image: "https://placehold.co/600x400/ffedd5/c2410c?text=Tacos+de+Pollo",
+                description: "Tacos mexicanos rápidos con tiras de pollo.",
+                ingredients: [
+                    { name: "Tortillas de maíz/trigo", baseQty: 4, unit: "unidades", category: "Despensa", pricePerKg: 4.5 },
+                    { name: "Pechuga de pollo en tiras", baseQty: 220, unit: "g", category: "Carnicería", pricePerKg: 7.5 },
+                    { name: "Lechuga y tomate", baseQty: 120, unit: "g", category: "Frutería", pricePerKg: 2.0 }
+                ],
+                steps: [
+                    "Adobar las tiras de pollo y cocinarlas en la Airfryer a 190°C durante 10 minutos.",
+                    "Calentar las tortillas y montar con la lechuga, tomate y el pollo crujiente."
+                ]
+            },
+            {
+                id: 5,
+                name: "Pasta integral con salsa boloñesa de pavo",
+                category: "lunch",
+                styles: ["tradicional", "economico", "proteico"],
+                diet: ["none", "no-pork"],
+                allergens: ["gluten"],
+                equipment: ["fuego"],
+                time: 20,
+                calories: 550,
+                image: "https://placehold.co/600x400/fae8ff/86198f?text=Pasta+Bolognesa",
+                description: "Pasta integral con carne picada de pavo y tomate.",
+                ingredients: [
+                    { name: "Pasta integral", baseQty: 160, unit: "g", category: "Despensa", pricePerKg: 2.5 },
+                    { name: "Carne picada de pavo", baseQty: 220, unit: "g", category: "Carnicería", pricePerKg: 8.0 },
+                    { name: "Salsa de tomate frito", baseQty: 180, unit: "g", category: "Despensa", pricePerKg: 2.2 },
+                    { name: "Queso rallado", baseQty: 40, unit: "g", category: "Lácteos", pricePerKg: 9.5 }
+                ],
+                steps: [
+                    "Cocer la pasta en abundante agua hirviendo con sal.",
+                    "Dorar la carne picada de pavo en una sartén y añadir el tomate.",
+                    "Mezclar la pasta con la boloñesa y servir con queso rallado."
+                ]
+            },
+            {
+                id: 6,
+                name: "Crema de calabacín y quesitos con picatostes",
+                category: "dinner",
+                styles: ["sano", "bajo-calorias", "economico"],
+                diet: ["none", "no-pork", "vegetarian", "gluten-free"],
+                allergens: ["lacteos"],
+                equipment: ["fuego", "batidora"],
+                time: 25,
+                calories: 310,
+                image: "https://placehold.co/600x400/ecfccb/3f6212?text=Crema+Calabacin",
+                description: "Crema suave, reconfortante y muy económica.",
+                ingredients: [
+                    { name: "Calabacines", baseQty: 450, unit: "g", category: "Frutería", pricePerKg: 2.2 },
+                    { name: "Cebolla", baseQty: 80, unit: "g", category: "Frutería", pricePerKg: 1.5 },
+                    { name: "Quesitos porciones", baseQty: 2, unit: "unidades", category: "Lácteos", pricePerKg: 7.0 },
+                    { name: "Aceite de oliva y sal", baseQty: 15, unit: "ml", category: "Despensa", pricePerKg: 8.0 }
+                ],
+                steps: [
+                    "Rehogar la cebolla y los calabacines troceados en una olla.",
+                    "Cubrir con agua, cocer 15 minutos y batir junto con los quesitos hasta obtener una crema fina."
+                ]
+            },
+            {
+                id: 7,
+                name: "Tortilla de patatas y cebolla tradicional",
+                category: "lunch",
+                styles: ["tradicional", "economico"],
+                diet: ["none", "no-pork", "vegetarian", "gluten-free"],
+                allergens: ["huevo"],
+                equipment: ["fuego", "microondas"],
+                time: 25,
+                calories: 420,
+                image: "https://placehold.co/600x400/fef9c3/854d0e?text=Tortilla+Patatas",
+                description: "La reina de la cocina casera española.",
+                ingredients: [
+                    { name: "Patatas", baseQty: 450, unit: "g", category: "Frutería", pricePerKg: 1.4 },
+                    { name: "Huevos", baseQty: 4, unit: "unidades", category: "Lácteos", pricePerKg: 4.0 },
+                    { name: "Cebolla", baseQty: 80, unit: "g", category: "Frutería", pricePerKg: 1.5 },
+                    { name: "Aceite de oliva", baseQty: 40, unit: "ml", category: "Despensa", pricePerKg: 8.0 }
+                ],
+                steps: [
+                    "Cocinar las patatas y la cebolla hasta que estén tiernas.",
+                    "Batir los huevos, mezclar con las patatas y cuajar la tortilla en la sartén."
+                ]
+            },
+            {
+                id: 8,
+                name: "Wrap crujiente de atún y aguacate",
+                category: "dinner",
+                styles: ["express", "sano", "bajo-calorias"],
+                diet: ["none", "no-pork"],
+                allergens: ["gluten"],
+                equipment: [],
+                time: 10,
+                calories: 390,
+                image: "https://placehold.co/600x400/ccfbf1/115e59?text=Wrap+de+Atun",
+                description: "Wrap rápido, fresco y lleno de grasas saludables.",
+                ingredients: [
+                    { name: "Tortillas de trigo grandes", baseQty: 2, unit: "unidades", category: "Despensa", pricePerKg: 4.5 },
+                    { name: "Atún en lata", baseQty: 100, unit: "g", category: "Despensa", pricePerKg: 9.0 },
+                    { name: "Aguacate maduro", baseQty: 1, unit: "unidades", category: "Frutería", pricePerKg: 4.2 },
+                    { name: "Tomate y lechuga", baseQty: 80, unit: "g", category: "Frutería", pricePerKg: 2.0 }
+                ],
+                steps: [
+                    "Aplastar el aguacate sobre las tortillas.",
+                    "Añadir el atún, tomate y lechuga, enrollar y servir."
+                ]
+            },
+            {
+                id: 9,
+                name: "Arroz salteado con verduras y pollo",
+                category: "lunch",
+                styles: ["proteico", "express", "sano"],
+                diet: ["none", "no-pork", "gluten-free"],
+                allergens: [],
+                equipment: ["fuego"],
+                time: 20,
+                calories: 460,
+                image: "https://placehold.co/600x400/ffedd5/9a3412?text=Arroz+Salteado",
+                description: "Plato completo estilo wok rápido y económico.",
+                ingredients: [
+                    { name: "Arroz blanco", baseQty: 150, unit: "g", category: "Despensa", pricePerKg: 1.8 },
+                    { name: "Pechuga de pollo", baseQty: 180, unit: "g", category: "Carnicería", pricePerKg: 7.5 },
+                    { name: "Zanahoria y pimiento", baseQty: 120, unit: "g", category: "Frutería", pricePerKg: 2.0 },
+                    { name: "Salsa de soja", baseQty: 15, unit: "ml", category: "Despensa", pricePerKg: 6.0 }
+                ],
+                steps: [
+                    "Cocer el arroz blanco.",
+                    "Saltear el pollo y las verduras troceadas, añadir el arroz y salsa de soja."
+                ]
+            },
+            {
+                id: 10,
+                name: "Lentejas estofadas con verduras y patata",
+                category: "lunch",
+                styles: ["tradicional", "sano", "economico"],
+                diet: ["none", "no-pork", "vegan", "vegetarian", "gluten-free"],
+                allergens: [],
+                equipment: ["fuego", "olla expres"],
+                time: 30,
+                calories: 410,
+                image: "https://placehold.co/600x400/ffedd5/7c2d12?text=Lentejas+Caseras",
+                description: "Guiso tradicional de cuchara muy económico y nutritivo.",
+                ingredients: [
+                    { name: "Lentejas pardina", baseQty: 180, unit: "g", category: "Despensa", pricePerKg: 2.3 },
+                    { name: "Patata y zanahoria", baseQty: 250, unit: "g", category: "Frutería", pricePerKg: 1.6 },
+                    { name: "Cebolla y ajo", baseQty: 80, unit: "g", category: "Frutería", pricePerKg: 1.5 },
+                    { name: "Aceite de oliva", baseQty: 20, unit: "ml", category: "Despensa", pricePerKg: 8.0 }
+                ],
+                steps: [
+                    "Poner todos los ingredientes en la olla con agua fría y cocer hasta que estén tiernas."
+                ]
+            },
+            {
+                id: 11,
+                name: "Merluza a la plancha con ensalada verde",
+                category: "dinner",
+                styles: ["sano", "bajo-calorias", "express"],
+                diet: ["none", "no-pork", "gluten-free"],
+                allergens: ["marisco"],
+                equipment: ["fuego"],
+                time: 15,
+                calories: 340,
+                image: "https://placehold.co/600x400/e0f2fe/0284c7?text=Merluza+Plancha",
+                description: "Filete de merluza tierno con un toque de limón.",
+                ingredients: [
+                    { name: "Filetes de merluza", baseQty: 240, unit: "g", category: "Pescadería", pricePerKg: 12.0 },
+                    { name: "Lechuga y brotes", baseQty: 120, unit: "g", category: "Frutería", pricePerKg: 2.5 },
+                    { name: "Aceite y limón", baseQty: 15, unit: "ml", category: "Despensa", pricePerKg: 8.0 }
+                ],
+                steps: [
+                    "Marcar los filetes de merluza en la sartén con unas gotas de aceite.",
+                    "Servir junto con la ensalada fresca aliñada."
+                ]
+            },
+            {
+                id: 12,
+                name: "Hamburguesa de ternera casera con boniato al horno",
+                category: "lunch",
+                styles: ["proteico", "tradicional"],
+                diet: ["none", "no-pork"],
+                allergens: ["gluten"],
+                equipment: ["horno", "fuego"],
+                time: 30,
+                calories: 580,
+                image: "https://placehold.co/600x400/ffedd5/9a3412?text=Hamburguesa+Boniato",
+                description: "Hamburguesa de ternera jugosa con bastones de boniato.",
+                ingredients: [
+                    { name: "Carne picada de ternera", baseQty: 220, unit: "g", category: "Carnicería", pricePerKg: 9.5 },
+                    { name: "Boniato", baseQty: 250, unit: "g", category: "Frutería", pricePerKg: 2.1 },
+                    { name: "Pan de hamburguesa", baseQty: 2, unit: "unidades", category: "Despensa", pricePerKg: 4.0 }
+                ],
+                steps: [
+                    "Cortar el boniato en bastones y hornear a 200°C unos 20 minutos.",
+                    "Formar y cocinar la hamburguesa de ternera a la plancha.",
+                    "Montar el plato con el pan y los bastones crujientes."
+                ]
+            },
+            {
+                id: 13,
+                name: "Revuelto de ajetes tiernos y champiñones",
+                category: "dinner",
+                styles: ["express", "bajo-calorias", "sano"],
+                diet: ["none", "no-pork", "vegetarian", "gluten-free"],
+                allergens: ["huevo"],
+                equipment: ["fuego"],
+                time: 15,
+                calories: 320,
+                image: "https://placehold.co/600x400/fef08a/854d0e?text=Revuelto+Setas",
+                description: "Revuelto ligero lleno de sabor y textura.",
+                ingredients: [
+                    { name: "Huevos", baseQty: 3, unit: "unidades", category: "Lácteos", pricePerKg: 4.0 },
+                    { name: "Champiñones laminados", baseQty: 180, unit: "g", category: "Frutería", pricePerKg: 3.5 },
+                    { name: "Ajetes tiernos", baseQty: 80, unit: "g", category: "Frutería", pricePerKg: 4.0 }
+                ],
+                steps: [
+                    "Saltear los champiñones y ajetes en una sartén.",
+                    "Añadir los huevos batidos y remover suavemente hasta cuajar."
+                ]
+            },
+            {
+                id: 14,
+                name: "Espirales de pasta con verduras y dados de pavo",
+                category: "lunch",
+                styles: ["economico", "express"],
+                diet: ["none", "no-pork"],
+                allergens: ["gluten"],
+                equipment: ["fuego"],
+                time: 15,
+                calories: 460,
+                image: "https://placehold.co/600x400/ccfbf1/134e4a?text=Pasta+Verduras+Pavo",
+                description: "Pasta rápida salteada con verduras de temporada y pavo.",
+                ingredients: [
+                    { name: "Espirales de pasta", baseQty: 160, unit: "g", category: "Despensa", pricePerKg: 2.0 },
+                    { name: "Jamón cocido / pavo en dados", baseQty: 120, unit: "g", category: "Carnicería", pricePerKg: 7.0 },
+                    { name: "Calabacín y tomate", baseQty: 150, unit: "g", category: "Frutería", pricePerKg: 2.0 }
+                ],
+                steps: [
+                    "Cocer la pasta al dente.",
+                    "Saltear las verduras troceadas y los dados de pavo, mezclar con la pasta."
+                ]
+            }
+        ];
+
+        // --- ESTADO GLOBAL DE LA APP ---
+        const DEFAULT_SUPERMARKETS = [
+            { id: 'mercadona', name: 'Mercadona', priceIndex: 1.0 },
+            { id: 'carrefour', name: 'Carrefour', priceIndex: 1.04 },
+            { id: 'lidl', name: 'Lidl', priceIndex: 0.96 },
+            { id: 'bonpreu', name: 'Bonpreu / Esclat', priceIndex: 1.02 },
+            { id: 'aldi', name: 'Aldi', priceIndex: 0.97 },
+            { id: 'consum', name: 'Consum', priceIndex: 1.03 }
+        ];
+
+        const MEALS_LIST = [
+            { id: 'lunch', name: 'Comidas (Mediodía)', icon: 'fa-sun' },
+            { id: 'dinner', name: 'Cenas', icon: 'fa-moon' }
+        ];
+
+        const DAYS_LIST = [
+            { id: 'lunes', name: 'Lunes' },
+            { id: 'martes', name: 'Martes' },
+            { id: 'miercoles', name: 'Miércoles' },
+            { id: 'jueves', name: 'Jueves' },
+            { id: 'viernes', name: 'Viernes' },
+            { id: 'sabado', name: 'Sábado' },
+            { id: 'domingo', name: 'Domingo' }
+        ];
+
+        const STYLES_LIST = [
+            { id: 'proteico', name: 'Proteico' },
+            { id: 'bajo-calorias', name: 'Bajo en calorías' },
+            { id: 'sano', name: 'Sano' },
+            { id: 'express', name: 'Exprés (<20 min)' },
+            { id: 'economico', name: 'Económico' },
+            { id: 'tradicional', name: 'Tradicional' }
+        ];
+
+        const ALLERGIES_LIST = [
+            { id: 'gluten', name: 'Gluten' },
+            { id: 'lacteos', name: 'Lácteos' },
+            { id: 'frutos-secos', name: 'Frutos secos' },
+            { id: 'huevo', name: 'Huevo' },
+            { id: 'marisco', name: 'Marisco' }
+        ];
+
+        const EQUIPMENT_LIST = [
+            { id: 'microondas', name: 'Microondas' },
+            { id: 'horno', name: 'Horno' },
+            { id: 'fuego', name: 'Fuego / Vitro' },
+            { id: 'olla expres', name: 'Olla exprés' },
+            { id: 'airfryer', name: 'Airfryer' },
+            { id: 'batidora', name: 'Batidora / Robot' }
+        ];
+
+        let currentStep = 1;
+        const totalSteps = 5;
+        const stepNames = ["Supermercados", "Comensales y Presupuesto", "Días y Comidas", "Estilos, Dieta y Alergias", "Equipamiento de Cocina"];
+
+        let appState = {
+            supermarkets: [],
+            customSupermarkets: [],
+            people: 1,
+            budget: 70,
+            selectedDays: [],
+            selectedMeals: [],
+            styles: [],
+            diet: 'none',
+            allergies: [],
+            equipment: [],
+            currentPlan: {},
+            shoppingList: [],
+            budgetFactor: 1.0
+        };
+
+        // --- OBJETO APP GLOBAL ---
+        const app = {
+            resetConfig() {
+                document.getElementById('view-results').classList.add('hidden');
+                document.getElementById('view-config').classList.remove('hidden');
+                currentStep = 1;
+                renderWizardStep();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            openMobileGuide() {
+                document.getElementById('mobile-guide-modal').classList.remove('hidden');
+            },
+            closeMobileGuide() {
+                document.getElementById('mobile-guide-modal').classList.add('hidden');
+            },
+            toggleCardSelection(cardElement, inputId) {
+                const checkbox = document.getElementById(inputId);
+                if (!checkbox) return;
+                checkbox.checked = !checkbox.checked;
+                
+                if (checkbox.checked) {
+                    cardElement.className = "select-card rounded-2xl p-4 border-2 border-emerald-600 bg-emerald-50/70 shadow-xs cursor-pointer flex flex-col items-center justify-center text-center transition transform active:scale-95";
+                } else {
+                    cardElement.className = "select-card rounded-2xl p-4 border border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition transform active:scale-95 hover:border-emerald-300";
+                }
+            },
+            toggleInlineCardSelection(cardElement, inputId) {
+                const checkbox = document.getElementById(inputId);
+                if (!checkbox) return;
+                checkbox.checked = !checkbox.checked;
+                
+                if (checkbox.checked) {
+                    cardElement.className = "select-card flex items-center space-x-3 p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/70 shadow-xs cursor-pointer transition transform active:scale-95";
+                } else {
+                    cardElement.className = "select-card flex items-center space-x-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50 cursor-pointer transition transform active:scale-95 hover:border-emerald-300";
+                }
+            },
+            addCustomSupermarket() {
+                const input = document.getElementById('custom-supermarket');
+                const val = input.value.trim();
+                if(!val) return;
+                const container = document.getElementById('supermarkets-container');
+                const customId = 'custom_' + Date.now();
+                appState.customSupermarkets.push({ id: customId, name: val, priceIndex: 1.0 });
+                
+                const cardId = 'sup_card_' + customId;
+                const chkId = 'chk_' + customId;
+                
+                container.innerHTML += `
+                    <div id="${cardId}" onclick="app.toggleInlineCardSelection(this, '${chkId}')" class="select-card flex items-center space-x-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50 cursor-pointer transition transform active:scale-95 hover:border-emerald-300">
+                        <input type="checkbox" id="${chkId}" name="supermarket" value="${customId}" checked class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 pointer-events-none">
+                        <span class="text-xs font-semibold text-slate-700">${val} (Local)</span>
+                    </div>
+                `;
+                input.value = '';
+                showToast(`Supermercado "${val}" añadido y seleccionado`);
+            },
+            adjustPeople(change) {
+                let val = parseInt(document.getElementById('people-count').value) + change;
+                if (val < 1) val = 1;
+                if (val > 10) val = 10;
+                document.getElementById('people-count').value = val;
+                document.getElementById('people-count-display').innerText = `${val} persona${val > 1 ? 's' : ''}`;
+                appState.people = val;
+            },
+            nextStep() {
+                if(currentStep === 1) {
+                    const supChecked = Array.from(document.querySelectorAll('input[name="supermarket"]:checked')).map(el => el.value);
+                    if(supChecked.length === 0) {
+                        showToast("Por favor, selecciona al menos un supermercado", "error");
+                        return;
+                    }
+                    appState.supermarkets = supChecked;
+                } else if(currentStep === 2) {
+                    appState.people = parseInt(document.getElementById('people-count').value) || 1;
+                    appState.budget = parseFloat(document.getElementById('budget').value) || 70;
+                } else if(currentStep === 3) {
+                    const mealsChecked = Array.from(document.querySelectorAll('input[name="meals"]:checked')).map(el => el.value);
+                    const daysChecked = Array.from(document.querySelectorAll('input[name="days"]:checked')).map(el => el.value);
+                    if(mealsChecked.length === 0 || daysChecked.length === 0) {
+                        showToast("Selecciona al menos un tipo de comida y un día", "error");
+                        return;
+                    }
+                    appState.selectedMeals = mealsChecked;
+                    appState.selectedDays = daysChecked;
+                } else if(currentStep === 4) {
+                    appState.styles = Array.from(document.querySelectorAll('input[name="styles"]:checked')).map(el => el.value);
+                    appState.diet = document.getElementById('diet-select').value;
+                    appState.allergies = Array.from(document.querySelectorAll('input[name="allergies"]:checked')).map(el => el.value);
+                } else if(currentStep === 5) {
+                    appState.equipment = Array.from(document.querySelectorAll('input[name="equipment"]:checked')).map(el => el.value);
+                }
+
+                if(currentStep < totalSteps) {
+                    currentStep++;
+                    renderWizardStep();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            },
+            prevStep() {
+                if(currentStep > 1) {
+                    currentStep--;
+                    renderWizardStep();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            },
+            generatePlan(e) {
+                e.preventDefault();
+                appState.equipment = Array.from(document.querySelectorAll('input[name="equipment"]:checked')).map(el => el.value);
+
+                let availableRecipes = RECIPES_DB.filter(r => {
+                    if (appState.diet !== 'none' && !r.diet.includes(appState.diet) && !r.diet.includes('none')) {
+                        if (appState.diet === 'vegan' && !r.diet.includes('vegan')) return false;
+                        if (appState.diet === 'vegetarian' && !r.diet.includes('vegetarian') && !r.diet.includes('vegan')) return false;
+                        if (appState.diet === 'no-pork' && !r.diet.includes('no-pork')) return false;
+                        if (appState.diet === 'keto' && !r.diet.includes('keto')) return false;
+                    }
+                    for(let alg of appState.allergies) {
+                        if(r.allergens && r.allergens.includes(alg)) return false;
+                    }
+                    return true;
+                });
+
+                if (availableRecipes.length === 0) availableRecipes = [...RECIPES_DB];
+
+                // Generar plan garantizando COMIDA VARIADA Y SIN REPETIR recetas
+                let plan = {};
+                let usedRecipeIds = new Set();
+                
+                appState.selectedDays.forEach(day => {
+                    appState.selectedMeals.forEach(meal => {
+                        let matches = availableRecipes.filter(r => r.category === meal && !usedRecipeIds.has(r.id));
+                        if(matches.length === 0) matches = availableRecipes.filter(r => !usedRecipeIds.has(r.id));
+                        if(matches.length === 0) matches = availableRecipes;
+
+                        const randomIndex = Math.floor(Math.random() * matches.length);
+                        const chosen = matches[randomIndex];
+                        
+                        usedRecipeIds.add(chosen.id);
+                        plan[`${day}_${meal}`] = { ...chosen };
+                    });
+                });
+
+                appState.currentPlan = plan;
+
+                // CÁLCULO ESTRICTO DE PRESUPUESTO
+                buildShoppingList(plan, 1.0);
+                let initialTotal = appState.shoppingList.reduce((acc, i) => acc + i.estimatedPrice, 0);
+
+                if(initialTotal > appState.budget && appState.budget > 0) {
+                    appState.budgetFactor = parseFloat((appState.budget / initialTotal).toFixed(2));
+                    buildShoppingList(plan, appState.budgetFactor);
+                } else {
+                    appState.budgetFactor = 1.0;
+                }
+
+                document.getElementById('view-config').classList.add('hidden');
+                document.getElementById('view-results').classList.remove('hidden');
+                
+                document.getElementById('plan-subtitle').innerText = `Generado para ${appState.people} persona${appState.people > 1 ? 's' : ''} • Ajustado estrictamente a ≤ ${appState.budget} € (Sin repetir platos)`;
+
+                renderMenuUI();
+                renderShoppingUI();
+                app.switchTab('menu');
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showToast("¡Menú variado y ajustado a tu presupuesto generado!");
+
+                if (typeof window.saveToCloud === 'function') {
+                    window.saveToCloud();
+                }
+            },
+            switchTab(tabName) {
+                const menuTab = document.getElementById('tab-content-menu');
+                const shoppingTab = document.getElementById('tab-content-shopping');
+                const btnMenu = document.getElementById('tab-btn-menu');
+                const btnShopping = document.getElementById('tab-btn-shopping');
+
+                if(tabName === 'menu') {
+                    menuTab.classList.remove('hidden');
+                    shoppingTab.classList.add('hidden');
+                    btnMenu.className = "flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-semibold text-xs transition bg-white text-slate-900 shadow-xs cursor-pointer";
+                    btnShopping.className = "flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-semibold text-xs transition text-slate-600 hover:text-slate-900 cursor-pointer";
+                } else {
+                    menuTab.classList.add('hidden');
+                    shoppingTab.classList.remove('hidden');
+                    btnShopping.className = "flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-semibold text-xs transition bg-white text-slate-900 shadow-xs cursor-pointer";
+                    btnMenu.className = "flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-semibold text-xs transition text-slate-600 hover:text-slate-900 cursor-pointer";
+                }
+            },
+            resetShoppingChecks() {
+                appState.shoppingList.forEach(i => i.checked = false);
+                renderShoppingUI();
+                showToast("Lista de la compra reiniciada");
+                if (typeof window.saveToCloud === 'function') window.saveToCloud();
+            },
+            showConfigView() {
+                document.getElementById('view-results').classList.add('hidden');
+                document.getElementById('view-config').classList.remove('hidden');
+                currentStep = 1;
+                renderWizardStep();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            toggleShoppingItem(index) {
+                appState.shoppingList[index].checked = !appState.shoppingList[index].checked;
+                renderShoppingUI();
+                if (typeof window.saveToCloud === 'function') window.saveToCloud();
+            },
+            swapRecipe(dayId, mealType) {
+                let available = RECIPES_DB.filter(r => r.category === mealType);
+                let current = appState.currentPlan[`${dayId}_${mealType}`];
+                
+                let activeRecipeIds = new Set(Object.values(appState.currentPlan).map(r => r.id));
+                let alternatives = available.filter(r => r.id !== current.id && !activeRecipeIds.has(r.id));
+                
+                if(alternatives.length === 0) alternatives = available.filter(r => r.id !== current.id);
+                if(alternatives.length === 0) alternatives = available;
+
+                const newRecipe = alternatives[Math.floor(Math.random() * alternatives.length)];
+                appState.currentPlan[`${dayId}_${mealType}`] = { ...newRecipe };
+
+                buildShoppingList(appState.currentPlan, appState.budgetFactor);
+                renderMenuUI();
+                renderShoppingUI();
+                showToast("Receta variada cambiada con éxito");
+                if (typeof window.saveToCloud === 'function') window.saveToCloud();
+            },
+            openRecipeModal(dayId, mealType) {
+                openRecipeModal(dayId, mealType);
+            },
+            closeRecipeModal() {
+                closeRecipeModal();
+            }
+        };
+
+        // --- INICIALIZACIÓN ---
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAllWizardElementsEmpty();
+            renderWizardStep();
+        });
+
+        function renderAllWizardElementsEmpty() {
+            // Supermercados VACÍOS y táctiles
+            const supContainer = document.getElementById('supermarkets-container');
+            supContainer.innerHTML = '';
+            DEFAULT_SUPERMARKETS.forEach(s => {
+                supContainer.innerHTML += `
+                    <div onclick="app.toggleInlineCardSelection(this, 'chk_sup_${s.id}')" class="select-card flex items-center space-x-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50 cursor-pointer transition transform active:scale-95 hover:border-emerald-300">
+                        <input type="checkbox" id="chk_sup_${s.id}" name="supermarket" value="${s.id}" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 pointer-events-none">
+                        <span class="text-xs font-semibold text-slate-700">${s.name}</span>
+                    </div>
+                `;
+            });
+
+            // Comidas (Comidas / Cenas) VACÍAS y táctiles
+            const mealsContainer = document.getElementById('meals-container');
+            mealsContainer.innerHTML = '';
+            MEALS_LIST.forEach(m => {
+                mealsContainer.innerHTML += `
+                    <div onclick="app.toggleInlineCardSelection(this, 'chk_meal_${m.id}')" class="select-card flex items-center space-x-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50 cursor-pointer transition transform active:scale-95 hover:border-emerald-300">
+                        <input type="checkbox" id="chk_meal_${m.id}" name="meals" value="${m.id}" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 pointer-events-none">
+                        <span class="text-xs font-semibold text-slate-700"><i class="fa-solid ${m.icon} text-emerald-600 mr-2"></i>${m.name}</span>
+                    </div>
+                `;
+            });
+
+            // Días de la semana VACÍOS y táctiles
+            const daysContainer = document.getElementById('days-container');
+            daysContainer.innerHTML = '';
+            DAYS_LIST.forEach(d => {
+                daysContainer.innerHTML += `
+                    <div onclick="app.toggleInlineCardSelection(this, 'chk_day_${d.id}')" class="select-card flex items-center space-x-2 px-3.5 py-3 rounded-2xl border border-slate-200 bg-slate-50 cursor-pointer transition transform active:scale-95 hover:border-emerald-300">
+                        <input type="checkbox" id="chk_day_${d.id}" name="days" value="${d.id}" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 pointer-events-none">
+                        <span class="text-xs font-semibold text-slate-700">${d.name}</span>
+                    </div>
+                `;
+            });
+
+            // Estilos VACÍOS y táctiles
+            const stylesContainer = document.getElementById('styles-container');
+            stylesContainer.innerHTML = '';
+            STYLES_LIST.forEach(s => {
+                stylesContainer.innerHTML += `
+                    <div onclick="app.toggleInlineCardSelection(this, 'chk_style_${s.id}')" class="select-card flex items-center space-x-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50 cursor-pointer transition transform active:scale-95 hover:border-emerald-300">
+                        <input type="checkbox" id="chk_style_${s.id}" name="styles" value="${s.id}" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 pointer-events-none">
+                        <span class="text-xs font-semibold text-slate-700">${s.name}</span>
+                    </div>
+                `;
+            });
+
+            // Alergias VACÍAS y táctiles
+            const allergiesContainer = document.getElementById('allergies-container');
+            allergiesContainer.innerHTML = '';
+            ALLERGIES_LIST.forEach(a => {
+                allergiesContainer.innerHTML += `
+                    <div onclick="app.toggleInlineCardSelection(this, 'chk_alg_${a.id}')" class="select-card flex items-center space-x-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer transition transform active:scale-95 hover:border-emerald-300">
+                        <input type="checkbox" id="chk_alg_${a.id}" name="allergies" value="${a.id}" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 pointer-events-none">
+                        <span class="text-xs font-medium text-slate-700">${a.name}</span>
+                    </div>
+                `;
+            });
+
+            // Equipamiento VACÍO y táctil
+            const eqContainer = document.getElementById('equipment-container');
+            eqContainer.innerHTML = '';
+            EQUIPMENT_LIST.forEach(e => {
+                eqContainer.innerHTML += `
+                    <div onclick="app.toggleInlineCardSelection(this, 'chk_eq_${e.id}')" class="select-card flex items-center space-x-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50 cursor-pointer transition transform active:scale-95 hover:border-emerald-300">
+                        <input type="checkbox" id="chk_eq_${e.id}" name="equipment" value="${e.id}" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 pointer-events-none">
+                        <span class="text-xs font-semibold text-slate-700">${e.name}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('people-count').value = 1;
+            document.getElementById('people-count-display').innerText = `1 persona`;
+            document.getElementById('budget').value = 70;
+            document.getElementById('diet-select').value = 'none';
+        }
+
+        function renderWizardStep() {
+            const steps = document.querySelectorAll('.wizard-step');
+            steps.forEach(st => {
+                if(parseInt(st.getAttribute('data-step')) === currentStep) {
+                    st.classList.remove('hidden');
+                } else {
+                    st.classList.add('hidden');
+                }
+            });
+
+            document.getElementById('step-indicator-label').innerText = `Paso ${currentStep} de ${totalSteps}`;
+            document.getElementById('step-name-label').innerText = stepNames[currentStep - 1];
+            const percent = (currentStep / totalSteps) * 100;
+            document.getElementById('step-progress-bar').style.width = `${percent}%`;
+
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const btnSubmit = document.getElementById('btn-submit');
+
+            if(currentStep === 1) {
+                btnPrev.classList.add('hidden');
+            } else {
+                btnPrev.classList.remove('hidden');
+            }
+
+            if(currentStep === totalSteps) {
+                btnNext.classList.add('hidden');
+                btnSubmit.classList.remove('hidden');
+                btnSubmit.classList.add('flex');
+            } else {
+                btnNext.classList.remove('hidden');
+                btnSubmit.classList.add('hidden');
+                btnSubmit.classList.remove('flex');
+            }
+        }
+
+        // --- CONSTRUCCIÓN LISTA Y COMPARATIVA GLOBAL DE SUPERMERCADOS ---
+        function buildShoppingList(plan, factor = 1.0) {
+            let ingredientMap = {};
+
+            Object.values(plan).forEach(recipe => {
+                recipe.ingredients.forEach(ing => {
+                    const scaledQty = Math.round(((ing.baseQty / 2) * appState.people) * factor);
+                    const key = ing.name.toLowerCase().trim();
+
+                    if(!ingredientMap[key]) {
+                        ingredientMap[key] = {
+                            name: ing.name,
+                            category: ing.category,
+                            qty: scaledQty > 0 ? scaledQty : 10,
+                            unit: ing.unit,
+                            pricePerKg: ing.pricePerKg || 5.0,
+                            checked: false
+                        };
+                    } else {
+                        ingredientMap[key].qty += (scaledQty > 0 ? scaledQty : 10);
+                    }
+                });
+            });
+
+            let list = Object.values(ingredientMap).map(item => {
+                let unitFactor = item.unit === 'g' || item.unit === 'ml' ? (item.qty / 1000) : (item.unit === 'unidades' ? item.qty * 0.25 : item.qty * 0.5);
+                let basePrice = unitFactor * item.pricePerKg;
+                
+                let allSupermarketsList = [...DEFAULT_SUPERMARKETS, ...appState.customSupermarkets];
+                let supermarketPrices = {};
+                
+                allSupermarketsList.forEach(sup => {
+                    let variance = sup.priceIndex;
+                    let productVarModifier = 1.0;
+                    if(item.name.toLowerCase().includes('pollo') && sup.id === 'consum') {
+                        productVarModifier = 0.88; // Más económico en Consum
+                    } else if(item.name.toLowerCase().includes('salmón') && sup.id === 'lidl') {
+                        productVarModifier = 0.90;
+                    }
+
+                    let finalItemPrice = basePrice * variance * productVarModifier;
+                    supermarketPrices[sup.id] = parseFloat(finalItemPrice.toFixed(2));
+                });
+
+                let preferredSupPrices = appState.supermarkets.map(sId => supermarketPrices[sId] || basePrice);
+                let cheapestPreferredSup = appState.supermarkets[0] || 'mercadona';
+                let minPreferredPrice = preferredSupPrices[0] || basePrice;
+
+                appState.supermarkets.forEach((supId, idx) => {
+                    if(preferredSupPrices[idx] < minPreferredPrice) {
+                        minPreferredPrice = preferredSupPrices[idx];
+                        cheapestPreferredSup = supId;
+                    }
+                });
+
+                let absoluteCheapestSupId = cheapestPreferredSup;
+                let absoluteMinPrice = minPreferredPrice;
+                
+                for(let supId in supermarketPrices) {
+                    if(supermarketPrices[supId] < absoluteMinPrice) {
+                        absoluteMinPrice = supermarketPrices[supId];
+                        absoluteCheapestSupId = supId;
+                    }
+                }
+
+                let savingsNotice = null;
+                if(!appState.supermarkets.includes(absoluteCheapestSupId) && (minPreferredPrice - absoluteMinPrice) > 0.15) {
+                    let extSupName = getSupermarketName(absoluteCheapestSupId);
+                    let diff = (minPreferredPrice - absoluteMinPrice).toFixed(2);
+                    savingsNotice = `💡 El/la ${item.name} está ${diff} € más barato en ${extSupName} (fuera de tus seleccionados). ¡Valora si te compensa desplazarte!`;
+                }
+
+                return {
+                    ...item,
+                    estimatedPrice: minPreferredPrice,
+                    cheapestSupermarket: cheapestPreferredSup,
+                    supermarketPrices: supermarketPrices,
+                    savingsNotice: savingsNotice,
+                    checked: false
+                };
+            });
+
+            appState.shoppingList = list;
+        }
+
+        // --- RENDERIZADO DE MENÚ ---
+        function renderMenuUI() {
+            const grid = document.getElementById('menu-days-grid');
+            grid.innerHTML = '';
+
+            appState.selectedDays.forEach(dayId => {
+                const dayObj = DAYS_LIST.find(d => d.id === dayId);
+                
+                let dayHtml = `
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
+                                <h4 class="font-bold text-base text-slate-900 capitalize tracking-tight flex items-center">
+                                    <span class="w-2.5 h-2.5 bg-emerald-600 rounded-full mr-2.5"></span>
+                                    ${dayObj.name}
+                                </h4>
+                                <span class="text-xs bg-emerald-50 text-emerald-700 font-semibold px-3 py-1 rounded-full border border-emerald-200/50">Variado</span>
+                            </div>
+                            <div class="space-y-6">
+                `;
+
+                appState.selectedMeals.forEach(mealType => {
+                    const key = `${dayId}_${mealType}`;
+                    const recipe = appState.currentPlan[key];
+                    const mealTitle = mealType === 'lunch' ? 'Comida (Mediodía)' : 'Cena';
+                    const mealIcon = mealType === 'lunch' ? 'fa-sun text-amber-500' : 'fa-moon text-indigo-500';
+
+                    if(recipe) {
+                        // Construir lista de ingredientes detallada igual que la lista de la compra
+                        let ingredientsListHtml = '';
+                        recipe.ingredients.forEach(ing => {
+                            const scaledQty = Math.round(((ing.baseQty / 2) * appState.people) * appState.budgetFactor);
+                            const finalQty = scaledQty > 0 ? scaledQty : 5;
+                            const unitFactor = ing.unit === 'g' || ing.unit === 'ml' ? (finalQty / 1000) : (ing.unit === 'unidades' ? finalQty * 0.25 : finalQty * 0.5);
+                            let basePrice = unitFactor * (ing.pricePerKg || 5.0);
+
+                            // Comprobar si hay comparativa de supermercados en la cesta global
+                            let globalShoppingItem = appState.shoppingList.find(s => s.name.toLowerCase().trim() === ing.name.toLowerCase().trim());
+                            let itemPrice = globalShoppingItem ? globalShoppingItem.estimatedPrice : basePrice;
+                            let cheapestSup = globalShoppingItem ? globalShoppingItem.cheapestSupermarket : (appState.supermarkets[0] || 'mercadona');
+
+                            ingredientsListHtml += `
+                                <div class="flex flex-col p-2.5 rounded-xl bg-white border border-slate-100 space-y-1">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2.5 flex-1">
+                                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                            <span class="text-xs font-medium text-slate-800">${ing.name}</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs font-bold text-slate-600">${finalQty} ${ing.unit}</span>
+                                            <span class="text-[11px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg">${itemPrice.toFixed(2)} €</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 pl-4 flex items-center justify-between">
+                                        <span>Súper más económico: <strong class="text-slate-600 uppercase">${getSupermarketName(cheapestSup)}</strong></span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        dayHtml += `
+                            <div class="bg-slate-50/90 rounded-2xl p-4 border border-slate-200 hover:border-emerald-400 transition group shadow-2xs space-y-3.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center">
+                                        <i class="fa-solid ${mealIcon} mr-1.5 text-sm"></i>${mealTitle}
+                                    </span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-[11px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded-lg border border-slate-200">
+                                            <i class="fa-regular fa-clock mr-1 text-emerald-600"></i>${recipe.time} min
+                                        </span>
+                                        <button onclick="app.swapRecipe('${dayId}', '${mealType}')" title="Cambiar receta alternativa" class="w-7 h-7 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-500 hover:text-emerald-600 rounded-xl transition cursor-pointer flex items-center justify-center shadow-2xs">
+                                            <i class="fa-solid fa-rotate text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h5 class="font-bold text-sm text-slate-900 leading-snug group-hover:text-emerald-700 transition">${recipe.name}</h5>
+                                    <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">${recipe.description}</p>
+                                </div>
+
+                                <!-- Ingredientes desplegados directamente con precios y supermercados -->
+                                <div class="space-y-1.5 pt-1">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ingredientes y Precios Estimados:</span>
+                                    <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                        ${ingredientsListHtml}
+                                    </div>
+                                </div>
+
+                                <button onclick="app.openRecipeModal('${dayId}', '${mealType}')" class="w-full mt-1 bg-white hover:bg-emerald-600 text-slate-700 hover:text-white border border-slate-200 hover:border-emerald-600 py-2.5 px-3 rounded-xl text-xs font-semibold transition shadow-2xs cursor-pointer flex items-center justify-center space-x-2">
+                                    <i class="fa-solid fa-book-open"></i>
+                                    <span>Ver pasos de preparación completos</span>
+                                </button>
+                            </div>
+                        `;
+                    }
+                });
+
+                dayHtml += `</div></div></div>`;
+                grid.innerHTML += dayHtml;
+            });
+
+            const totalCost = appState.shoppingList.reduce((acc, i) => acc + i.estimatedPrice, 0);
+            const budgetBox = document.getElementById('budget-summary-text');
+            const alertBox = document.getElementById('budget-alert-box');
+            const badgePill = document.getElementById('budget-badge-pill');
+
+            budgetBox.innerText = `Cesta optimizada: ${totalCost.toFixed(2)} € (Tu límite máximo era: ${appState.budget} €).`;
+            if(totalCost <= appState.budget) {
+                alertBox.className = "bg-emerald-50 border border-emerald-200 rounded-3xl p-5 flex items-center justify-between flex-wrap gap-4";
+                badgePill.innerText = `Ahorro de ${(appState.budget - totalCost).toFixed(2)} € sobre tu límite`;
+            } else {
+                alertBox.className = "bg-amber-50 border border-amber-200 rounded-3xl p-5 flex items-center justify-between flex-wrap gap-4";
+                badgePill.innerText = `Límite ajustado`;
+            }
+        }
+
+        // --- RENDERIZADO DE COMPRA ---
+        function renderShoppingUI() {
+            const compCards = document.getElementById('supermarket-comparison-cards');
+            compCards.innerHTML = '';
+
+            let allSups = [...DEFAULT_SUPERMARKETS, ...appState.customSupermarkets];
+            let supTotals = {};
+            
+            allSups.forEach(sup => {
+                let sum = appState.shoppingList.reduce((acc, item) => acc + (item.supermarketPrices[sup.id] || item.estimatedPrice), 0);
+                supTotals[sup.id] = sum;
+            });
+
+            let cheapestSupId = appState.supermarkets[0] || 'mercadona';
+            appState.supermarkets.forEach(supId => {
+                if(supTotals[supId] < (supTotals[cheapestSupId] || 999)) cheapestSupId = supId;
+            });
+
+            appState.supermarkets.forEach(supId => {
+                let supObj = allSups.find(s => s.id === supId);
+                let supName = supObj ? supObj.name : supId;
+                let total = supTotals[supId] || 0;
+                let isCheapest = supId === cheapestSupId;
+
+                compCards.innerHTML += `
+                    <div class="bg-slate-50 rounded-2xl p-4 border ${isCheapest ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200'} flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-xs text-slate-800">${supName}</span>
+                                ${isCheapest ? '<span class="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full">¡Más barato!</span>' : ''}
+                            </div>
+                            <span class="text-lg font-extrabold text-slate-900">${total.toFixed(2)} €</span>
+                        </div>
+                        ${!isCheapest ? `<p class="text-[10px] text-amber-600 mt-2 font-medium">💡 +${(total - (supTotals[cheapestSupId] || 0)).toFixed(2)} € vs ${getSupermarketName(cheapestSupId)}</p>` : '<p class="text-[10px] text-emerald-600 mt-2 font-medium">✨ Opción óptima</p>'}
+                    </div>
+                `;
+            });
+
+            const categories = {};
+            appState.shoppingList.forEach((item, idx) => {
+                if(!categories[item.category]) categories[item.category] = [];
+                categories[item.category].push({ ...item, originalIndex: idx });
+            });
+
+            const catContainer = document.getElementById('shopping-categories-container');
+            catContainer.innerHTML = '';
+
+            for(let cat in categories) {
+                let itemsHtml = '';
+                categories[cat].forEach(item => {
+                    itemsHtml += `
+                        <div class="flex flex-col p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100/50 transition space-y-1">
+                            <div class="flex items-center justify-between">
+                                <label class="flex items-center space-x-3 cursor-pointer flex-1 py-1">
+                                    <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="app.toggleShoppingItem(${item.originalIndex})" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <span class="text-xs font-semibold ${item.checked ? 'line-through text-slate-400' : 'text-slate-800'}">${item.name}</span>
+                                </label>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-xs font-bold text-slate-600">${item.qty} ${item.unit}</span>
+                                    <span class="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl">${item.estimatedPrice.toFixed(2)} €</span>
+                                </div>
+                            </div>
+                            ${item.savingsNotice ? `<div class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl font-medium mt-1"><i class="fa-solid fa-lightbulb text-amber-600 mr-1.5"></i>${item.savingsNotice}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                catContainer.innerHTML += `
+                    <div class="space-y-3">
+                        <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-1.5"><i class="fa-solid fa-tag text-emerald-600 mr-1.5"></i>${cat}</h5>
+                        <div class="space-y-2">${itemsHtml}</div>
+                    </div>
+                `;
+            }
+
+            const totalBasket = appState.shoppingList.reduce((acc, i) => acc + (i.checked ? 0 : i.estimatedPrice), 0);
+            const boughtCount = appState.shoppingList.filter(i => i.checked).length;
+            document.getElementById('shopping-total-price').innerText = `${totalBasket.toFixed(2)} €`;
+            document.getElementById('shopping-items-count').innerText = `${boughtCount} de ${appState.shoppingList.length} productos comprados`;
+        }
+
+        // --- MODAL DE RECETA ---
+        function openRecipeModal(dayId, mealType) {
+            const recipe = appState.currentPlan[`${dayId}_${mealType}`];
+            if(!recipe) return;
+
+            const modalContent = document.getElementById('modal-recipe-content');
+            
+            let ingredientsHtml = '';
+            recipe.ingredients.forEach(ing => {
+                const scaledQty = Math.round(((ing.baseQty / 2) * appState.people) * appState.budgetFactor);
+                ingredientsHtml += `<li class="flex justify-between py-1.5 border-b border-slate-100 text-xs"><span class="font-medium text-slate-800">${ing.name}</span><span class="font-bold text-emerald-700">${scaledQty > 0 ? scaledQty : 5} ${ing.unit}</span></li>`;
+            });
+
+            let stepsHtml = '';
+            recipe.steps.forEach((step, idx) => {
+                stepsHtml += `<li class="flex space-x-3 text-xs text-slate-600"><span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0">${idx+1}</span><span class="pt-1">${step}</span></li>`;
+            });
+
+            modalContent.innerHTML = `
+                <div class="space-y-4">
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">${recipe.category === 'lunch' ? 'Comida' : 'Cena'}</span>
+                    <h3 class="text-xl font-bold text-slate-900">${recipe.name}</h3>
+                    <p class="text-xs text-slate-500">${recipe.description}</p>
+                    
+                    <div class="flex items-center space-x-4 py-2 border-y border-slate-100 text-xs font-semibold text-slate-600">
+                        <span><i class="fa-regular fa-clock text-emerald-600 mr-1.5"></i>${recipe.time} min</span>
+                        <span><i class="fa-solid fa-fire text-emerald-600 mr-1.5"></i>${recipe.calories} kcal</span>
+                        <span><i class="fa-solid fa-users text-emerald-600 mr-1.5"></i>${appState.people} pers.</span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="font-bold text-sm text-slate-900"><i class="fa-solid fa-basket-shopping text-emerald-600 mr-2"></i>Ingredientes ajustados</h4>
+                        <ul class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${ingredientsHtml}</ul>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="font-bold text-sm text-slate-900"><i class="fa-solid fa-list-check text-emerald-600 mr-2"></i>Preparación</h4>
+                        <ul class="space-y-3 pt-2">${stepsHtml}</ul>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('recipe-modal').classList.remove('hidden');
+        }
+
+        function closeRecipeModal() {
+            document.getElementById('recipe-modal').classList.add('hidden');
+        }
+
+        function getSupermarketName(id) {
+            let allSups = [...DEFAULT_SUPERMARKETS, ...appState.customSupermarkets];
+            let found = allSups.find(s => s.id === id);
+            return found ? found.name : id;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toast-message');
+            const icon = document.getElementById('toast-icon');
+
+            msg.innerText = message;
+            if(type === 'error') {
+                icon.className = "fa-solid fa-circle-exclamation text-rose-400 text-lg";
+            } else {
+                icon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
