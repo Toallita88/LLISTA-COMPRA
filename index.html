@@ -37,12 +37,12 @@
     <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Wizard de Configuración Inicial (Nada preseleccionado) -->
+        <!-- Wizard de Configuración Inicial -->
         <section id="view-config" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
             <div class="bg-gradient-to-r from-emerald-600 to-teal-700 px-8 py-6 text-white">
                 <h2 class="text-2xl font-bold">Configura tu Planificador</h2>
                 <p class="text-emerald-100 text-sm mt-1">Selecciona tus preferencias manualmente para crear un menú a medida.</p>
-                <div class="flex items-center space-x-2 mt-4 text-xs font-semibold bg-black/20 w-fit px-3 py-1 rounded-full">
+                <div class="flex items-center space-x-2 mt-4 text-xs font-semibold bg-black/25 w-fit px-3 py-1 rounded-full">
                     <span id="step-indicator">Paso 1 de 5</span>
                 </div>
             </div>
@@ -61,48 +61,89 @@
                     <p class="text-sm text-slate-500 mb-6">Ajusta los comensales y el tope de dinero que no deseas rebasar.</p>
                     <div class="space-y-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">Número de comensales: <span id="lbl-people" class="text-emerald-600 font-bold">2</span></label>
-                            <input type="range" id="input-people" min="1" max="8" value="2" class="w-full accent-emerald-600" oninput="app.updatePeople(this.value)">
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Número de comensales (hasta 20): <span id="lbl-people" class="text-emerald-600 font-bold">2</span></label>
+                            <input type="range" id="input-people" min="1" max="20" value="2" class="w-full accent-emerald-600" oninput="app.updatePeople(this.value)">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Presupuesto máximo (€): <span id="lbl-budget" class="text-emerald-600 font-bold">50</span> €</label>
-                            <input type="range" id="input-budget" min="20" max="200" step="5" value="50" class="w-full accent-emerald-600" oninput="app.updateBudget(this.value)">
-                            <p class="text-xs text-slate-500 mt-1">El sistema ajustará los platos para acercarse al máximo posible sin pasarse.</p>
+                            <input type="range" id="input-budget" min="10" max="300" step="5" value="50" class="w-full accent-emerald-600" oninput="app.updateBudget(this.value)">
+                            <p class="text-xs text-slate-500 mt-1">El sistema validará si el presupuesto es suficiente para tus días y comensales.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Paso 3: Días y Comidas -->
+                <!-- Paso 3: Días, Comidas y Postres -->
                 <div class="wizard-step hidden" data-step="3">
-                    <h3 class="text-lg font-bold text-slate-900 mb-2">3. Días y Comidas a Planificar</h3>
-                    <p class="text-sm text-slate-500 mb-6">Selecciona manualmente los días y las comidas que deseas incluir.</p>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">3. Días, Comidas y Postres a Planificar</h3>
+                    <p class="text-sm text-slate-500 mb-6">Selecciona los días, si deseas incluir postres caseros y las comidas.</p>
+                    <div class="mb-4 flex items-center justify-between bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                        <div>
+                            <h4 class="font-bold text-emerald-900 text-sm">Incluir Postres Variados</h4>
+                            <p class="text-xs text-emerald-700">Añade postres caseros rápidos sin repetir en la semana.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="input-include-dessert" onchange="app.toggleDesserts(this.checked)" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        </label>
+                    </div>
                     <div class="mb-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Comidas</h4>
                         <div class="grid grid-cols-2 gap-3" id="config-meals"></div>
                     </div>
-                    <div>
+                    <div class="mb-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Días de la semana</h4>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="config-days"></div>
+                    </div>
+                    <div id="budget-warning-box" class="hidden mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl flex items-center space-x-2">
+                        <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                        <span id="budget-warning-text">Presupuesto bajo para los días y comensales seleccionados.</span>
                     </div>
                 </div>
 
                 <!-- Paso 4: Estilos y Preferencias -->
                 <div class="wizard-step hidden" data-step="4">
-                    <h3 class="text-lg font-bold text-slate-900 mb-2">4. Estilos de Cocina y Preferencias</h3>
-                    <p class="text-sm text-slate-500 mb-6">Selecciona los estilos que te apetezcan (sin selecciones por defecto).</p>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="config-styles"></div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">4. Estilos de Cocina y Restricciones</h3>
+                    <p class="text-sm text-slate-500 mb-6">Filtra estilos y añade ingredientes obligatorios o vetados con alineación perfecta.</p>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6" id="config-styles"></div>
+
+                    <!-- Contenedor alineado exactamente a la misma altura -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100 items-stretch">
+                        <div class="flex flex-col justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Ingredientes Obligatorios (separados por coma)</label>
+                            <input type="text" id="input-mandatory" placeholder="ej: pollo, salmón" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        </div>
+                        <div class="flex flex-col justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Ingredientes Prohibidos / Vetados</label>
+                            <input type="text" id="input-forbidden" placeholder="ej: brócoli, pimiento" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Paso 5: Alergias y Equipamiento -->
+                <!-- Paso 5: Alergias y Equipamiento Personalizado con LocalStorage -->
                 <div class="wizard-step hidden" data-step="5">
-                    <h3 class="text-lg font-bold text-slate-900 mb-2">5. Alergias y Equipamiento de Cocina</h3>
-                    <p class="text-sm text-slate-500 mb-6">Indica restricciones o electrodomésticos disponibles (opcional).</p>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">5. Alergias y Equipamiento Personalizado</h3>
+                    <p class="text-sm text-slate-500 mb-6">Guarda tus alergias o electrodomésticos en tu dispositivo local.</p>
+                    
                     <div class="mb-6">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Alergias / Restricciones</h4>
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Alergias / Restricciones</h4>
+                            <div class="flex space-x-2">
+                                <input type="text" id="new-allergy-input" placeholder="Nueva alergia..." class="text-xs border border-slate-300 rounded-lg px-2 py-1 focus:outline-none">
+                                <button onclick="app.addCustomAllergy()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1 rounded-lg">Añadir</button>
+                            </div>
+                        </div>
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="config-allergies"></div>
                     </div>
+
                     <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Electrodomésticos</h4>
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Electrodomésticos</h4>
+                            <div class="flex space-x-2">
+                                <input type="text" id="new-equip-input" placeholder="Nuevo aparato..." class="text-xs border border-slate-300 rounded-lg px-2 py-1 focus:outline-none">
+                                <button onclick="app.addCustomEquipment()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1 rounded-lg">Añadir</button>
+                            </div>
+                        </div>
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="config-equipment"></div>
                     </div>
                 </div>
@@ -124,10 +165,8 @@
             </div>
         </section>
 
-        <!-- Vista de Resultados (Menú y Lista de Compra) -->
+        <!-- Vista de Resultados -->
         <section id="view-results" class="hidden space-y-6">
-            
-            <!-- Barra superior de gestión y selector de semana -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center space-x-4">
                     <div>
@@ -153,18 +192,18 @@
                 </div>
             </div>
 
-            <!-- Contenido de Pestaña: Menú Semanal -->
+            <!-- Contenido Pestaña Menú -->
             <div id="tab-content-menu" class="space-y-6">
                 <div id="menu-container" class="space-y-6"></div>
             </div>
 
-            <!-- Contenido de Pestaña: Lista de Compra -->
+            <!-- Contenido Pestaña Lista de Compra -->
             <div id="tab-content-shopping" class="hidden space-y-6">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                     <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
                         <div>
                             <h3 class="text-xl font-bold text-slate-900">Lista de la Compra Optimizada</h3>
-                            <p class="text-sm text-slate-500">Cantidades calculadas para tus comensales y presupuesto. Incluye alertas de ahorro en otros supermercados.</p>
+                            <p class="text-sm text-slate-500">Cantidades redondeadas y paquetes lógicos calculados. Incluye comparativas con otros supermercados.</p>
                         </div>
                         <div class="bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl text-right">
                             <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 block">Gasto Estimado Total</span>
@@ -175,18 +214,30 @@
                     <div id="shopping-list-container" class="divide-y divide-slate-100"></div>
                 </div>
             </div>
-
         </section>
-
     </main>
 
     <!-- Modal de Receta Detallada -->
     <div id="recipe-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200" id="recipe-modal-content">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200" id="recipe-modal-content">
         </div>
     </div>
 
-    <!-- Script de la Aplicación -->
+    <!-- Modal de Alerta de Bloqueo por Presupuesto -->
+    <div id="alert-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+                <i class="fa-solid fa-ban"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900">NO PUEDES CONTINUAR</h3>
+            <p id="alert-modal-message" class="text-sm text-slate-600 leading-relaxed"></p>
+            <button onclick="app.closeAlertModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
+                Entendido, corregir valores
+            </button>
+        </div>
+    </div>
+
+    <!-- Script Principal -->
     <script>
         const SUPERMARKETS = [
             { id: 'mercadona', name: 'Mercadona', priceIndex: 1.0 },
@@ -220,174 +271,269 @@
             { id: 'economico', name: 'Económico' }
         ];
 
-        const ALLERGIES_LIST = [
+        let DEFAULT_ALLERGIES = [
             { id: 'gluten', name: 'Sin Gluten' },
             { id: 'lacteos', name: 'Sin Lácteos' },
             { id: 'frutos-secos', name: 'Sin Frutos Secos' },
             { id: 'marisco', name: 'Sin Marisco' }
         ];
 
-        const EQUIPMENT_LIST = [
+        let DEFAULT_EQUIPMENT = [
             { id: 'microondas', name: 'Microondas' },
             { id: 'horno', name: 'Horno' },
             { id: 'fuego', name: 'Fuego / Vitro' },
             { id: 'airfryer', name: 'Airfryer' }
         ];
 
-        // Base de recetas variadas (Sin tortilla de patatas, 100% nutritivas y paso a paso)
+        // Base de recetas principales variadas (Garantiza redondeo exacto de gramos)
         const RECIPES_DB = [
             {
-                id: 1, name: "Pechuga de pollo al limón con arroz basmati y brócoli", category: "lunch", styles: ["sano", "proteico", "express"], diet: ["gluten-free"], equipment: ["fuego"], time: 20, calories: 450,
+                id: 1, name: "Pechuga de pollo al limón con arroz basmati y brócoli", category: "lunch", styles: ["sano", "proteico", "express"], equipment: ["fuego"], time: 20, calories: 450,
                 description: "Pechuga tierna marinada en zumo de limón natural, acompañada de arroz aromático y floretes de brócoli al vapor.",
                 ingredients: [
-                    { name: "Pechuga de pollo", baseQty: 200, unit: "g", category: "Carnicería", pricePerKg: 7.5 },
-                    { name: "Arroz basmati", baseQty: 90, unit: "g", category: "Despensa", pricePerKg: 2.2 },
-                    { name: "Brócoli fresco", baseQty: 150, unit: "g", category: "Frutería", pricePerKg: 3.0 },
-                    { name: "Limón", baseQty: 1, unit: "unidad", category: "Frutería", pricePerKg: 1.8 }
+                    { name: "Pechuga de pollo", baseQty: 200, unit: "g", category: "Carnicería", pricePerKg: 7.5, isPackage: false },
+                    { name: "Arroz basmati", baseQty: 100, unit: "g", category: "Despensa", pricePerKg: 2.2, isPackage: false },
+                    { name: "Brócoli fresco", baseQty: 150, unit: "g", category: "Frutería", pricePerKg: 3.0, isPackage: false },
+                    { name: "Limón", baseQty: 1, unit: "unidad", category: "Frutería", pricePerKg: 1.8, isPackage: true }
                 ],
                 steps: [
                     "Cocer el arroz basmati en agua hirviendo con sal durante 10-12 minutos y escurrir.",
                     "Cortar la pechuga de pollo en filetes finos y salpimentar al gusto.",
-                    "Cocinar el pollo en una sartén con unas gotas de aceite de oliva hasta que esté dorado por ambos lados y rociar con zumo de limón al final.",
-                    "Hervir o cocinar al vapor los floretes de brócoli durante 5-6 minutos para que queden al dente.",
-                    "Servir caliente en el plato combinando el arroz, el brócoli y el pollo jugoso."
+                    "Cocinar el pollo en una sartén con unas gotas de aceite de oliva hasta que esté dorado.",
+                    "Hervir los floretes de brócoli durante 5-6 minutos para que queden al dente.",
+                    "Servir caliente combinando el arroz, el brócoli y el pollo jugoso."
                 ]
             },
             {
-                id: 2, name: "Merluza a la plancha con puré de patata casero y espinacas", category: "dinner", styles: ["sano", "bajo-calorias"], diet: ["gluten-free", "marisco"], equipment: ["fuego"], time: 18, calories: 380,
-                description: "Lomos limpios de merluza dorados con un toque de ajo y perejil, acompañados de puré casero ligero y espinacas.",
+                id: 2, name: "Merluza a la plancha con puré de patata casero y espinacas", category: "dinner", styles: ["sano", "bajo-calorias"], equipment: ["fuego"], time: 18, calories: 380,
+                description: "Lomos limpios de merluza dorados con ajo y perejil, con puré casero ligero y espinacas.",
                 ingredients: [
-                    { name: "Lomos de merluza", baseQty: 220, unit: "g", category: "Pescadería", pricePerKg: 11.0 },
-                    { name: "Patatas", baseQty: 200, unit: "g", category: "Frutería", pricePerKg: 1.4 },
-                    { name: "Espinacas frescas", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 4.5 },
-                    { name: "Leche desnatada", baseQty: 60, unit: "ml", category: "Lácteos", pricePerKg: 0.9 }
+                    { name: "Lomos de merluza", baseQty: 200, unit: "g", category: "Pescadería", pricePerKg: 11.0, isPackage: false },
+                    { name: "Patatas", baseQty: 200, unit: "g", category: "Frutería", pricePerKg: 1.4, isPackage: false },
+                    { name: "Espinacas frescas", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 4.5, isPackage: false },
+                    { name: "Leche desnatada", baseQty: 100, unit: "ml", category: "Lácteos", pricePerKg: 0.9, isPackage: false }
                 ],
                 steps: [
-                    "Pelar y cocer las patatas en agua con sal hasta que estén tiernas (unos 15 minutos).",
-                    "Escurrir las patatas, añadir un chorrito de leche y machacar con un tenedor hasta obtener un puré suave.",
-                    "Salpimentar los lomos de merluza y cocinarlos a la plancha con unas gotas de aceite 2 minutos por cada lado.",
-                    "Saltear rápidamente las espinacas frescas en la misma sartén con un ajo picado durante 1 minuto.",
-                    "Emplatar colocando una base de puré, las espinacas y el pescado encima."
+                    "Pelar y cocer las patatas en agua con sal hasta que estén tiernas.",
+                    "Escurrir, añadir leche y machacar hasta obtener un puré suave.",
+                    "Cocinar la merluza a la plancha 2 minutos por cada lado.",
+                    "Saltear rápidamente las espinacas frescas con un ajo picado.",
+                    "Emplatar colocando base de puré, espinacas y pescado."
                 ]
             },
             {
-                id: 3, name: "Salteado exprés de ternera con pimientos y cebolla", category: "lunch", styles: ["proteico", "express"], diet: ["gluten-free"], equipment: ["fuego"], time: 15, calories: 420,
-                description: "Tiras finas de ternera salteadas a fuego vivo con crujientes bastones de pimiento rojo y verde.",
+                id: 3, name: "Salteado exprés de ternera con pimientos y cebolla", category: "lunch", styles: ["proteico", "express"], equipment: ["fuego"], time: 15, calories: 420,
+                description: "Tiras finas de ternera salteadas a fuego vivo con crujientes bastones de pimiento.",
                 ingredients: [
-                    { name: "Filetes de ternera finos", baseQty: 180, unit: "g", category: "Carnicería", pricePerKg: 13.5 },
-                    { name: "Pimiento rojo", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 2.8 },
-                    { name: "Pimiento verde", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 2.5 },
-                    { name: "Cebolla", baseQty: 80, unit: "g", category: "Frutería", pricePerKg: 1.5 }
+                    { name: "Filetes de ternera finos", baseQty: 200, unit: "g", category: "Carnicería", pricePerKg: 13.5, isPackage: false },
+                    { name: "Pimiento rojo", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 2.8, isPackage: false },
+                    { name: "Pimiento verde", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 2.5, isPackage: false },
+                    { name: "Cebolla", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 1.5, isPackage: false }
                 ],
                 steps: [
-                    "Cortar los pimientos y la cebolla en tiras finas (tipo juliana).",
-                    "Cortar los filetes de ternera en tiras del mismo tamaño.",
-                    "Calentar una sartén o wok a fuego fuerte con un poco de aceite de oliva.",
-                    "Saltear las verduras durante 4-5 minutos para que queden crujientes y retirarlas.",
-                    "En la misma sartén muy caliente, saltear la ternera 2 minutos con sal y pimienta, incorporar de nuevo las verduras, mezclar y servir."
+                    "Cortar los pimientos, la cebolla y la ternera en tiras finas.",
+                    "Saltear las verduras en sartén a fuego fuerte 4 minutos.",
+                    "Incorporar la ternera y saltear 2 minutos más.",
+                    "Servir caliente al momento."
                 ]
             },
             {
-                id: 4, name: "Crema ligera de calabacín y quesitos con picatostes", category: "dinner", styles: ["sano", "bajo-calorias", "economico"], diet: ["gluten-free"], equipment: ["fuego", "batidora"], time: 25, calories: 290,
-                description: "Crema suave y reconfortante elaborada con calabacines frescos y un toque cremoso.",
+                id: 4, name: "Crema ligera de calabacín y quesitos light", category: "dinner", styles: ["sano", "bajo-calorias", "economico"], equipment: ["fuego", "microondas"], time: 25, calories: 290,
+                description: "Crema reconfortante elaborada con calabacines frescos y quesitos en paquete.",
                 ingredients: [
-                    { name: "Calabacín", baseQty: 350, unit: "g", category: "Frutería", pricePerKg: 2.0 },
-                    { name: "Cebolla", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 1.5 },
-                    { name: "Quesitos light", baseQty: 2, unit: "unidades", category: "Lácteos", pricePerKg: 6.0 },
-                    { name: "Aceite de oliva y sal", baseQty: 15, unit: "ml", category: "Despensa", pricePerKg: 8.0 }
+                    { name: "Calabacín", baseQty: 300, unit: "g", category: "Frutería", pricePerKg: 2.0, isPackage: false },
+                    { name: "Cebolla", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 1.5, isPackage: false },
+                    { name: "Quesitos light", baseQty: 1, unit: "paquete", category: "Lácteos", pricePerKg: 2.5, isPackage: true }
                 ],
                 steps: [
-                    "Lavar y trocear el calabacín y la cebolla en dados medianos.",
-                    "Rehogar la cebolla y el calabacín en una cazuela con un chorrito de aceite durante 5 minutos.",
-                    "Cubrir con agua, añadir sal y cocer a fuego medio durante 15 minutos hasta que el calabacín esté blando.",
-                    "Añadir los quesitos y triturar con la batidora hasta obtener una crema fina y homogénea.",
-                    "Servir caliente en cuencos."
+                    "Trocear calabacín y cebolla, rehogar en cazuela con aceite.",
+                    "Cubrir con agua y cocer 15 minutos hasta ablandar.",
+                    "Añadir el paquete de quesitos light y triturar hasta obtener crema fina."
                 ]
             },
             {
-                id: 5, name: "Pavo al curry suave con verduras y cuscús", category: "lunch", styles: ["proteico", "sano"], diet: ["gluten-free"], equipment: ["fuego"], time: 20, calories: 460,
-                description: "Dados jugosos de pavo especiados con curry suave, acompañados de cuscús esponjoso.",
+                id: 5, name: "Pavo al curry suave con verduras y cuscús", category: "lunch", styles: ["proteico", "sano"], equipment: ["fuego"], time: 20, calories: 460,
+                description: "Dados jugosos de pavo especiados con curry, con cuscús esponjoso.",
                 ingredients: [
-                    { name: "Pechuga de pavo", baseQty: 200, unit: "g", category: "Carnicería", pricePerKg: 8.0 },
-                    { name: "Cuscús", baseQty: 80, unit: "g", category: "Despensa", pricePerKg: 2.5 },
-                    { name: "Calabacín", baseQty: 120, unit: "g", category: "Frutería", pricePerKg: 2.0 },
-                    { name: "Curry en polvo", baseQty: 5, unit: "g", category: "Despensa", pricePerKg: 12.0 }
+                    { name: "Pechuga de pavo", baseQty: 200, unit: "g", category: "Carnicería", pricePerKg: 8.0, isPackage: false },
+                    { name: "Cuscús", baseQty: 100, unit: "g", category: "Despensa", pricePerKg: 2.5, isPackage: false },
+                    { name: "Calabacín", baseQty: 150, unit: "g", category: "Frutería", pricePerKg: 2.0, isPackage: false }
                 ],
                 steps: [
-                    "Preparar el cuscús vertiendo la misma cantidad de agua hirviendo con sal, tapar y dejar reposar 5 minutos.",
-                    "Cortar la pechuga de pavo en dados medianos y salpimentar.",
-                    "Cortar el calabacín en cubos pequeños y saltearlo en una sartén con aceite.",
-                    "Añadir el pavo a la sartén y cocinar hasta que esté doradito. Incorporar el curry en polvo y remover bien.",
-                    "Servir el pavo especiado sobre una cama de cuscús esponjoso."
+                    "Preparar el cuscús con agua hirviendo y dejar reposar 5 minutos.",
+                    "Cortar pavo y calabacín en dados, cocinar en sartén.",
+                    "Añadir curry en polvo y remover bien antes de servir sobre el cuscús."
                 ]
             },
             {
-                id: 6, name: "Filete de salmón al horno con patatas panaderas", category: "dinner", styles: ["sano", "proteico"], diet: ["gluten-free", "marisco"], equipment: ["horno"], time: 25, calories: 510,
-                description: "Lomo jugoso de salmón horneado con patatas en rodajas finas y cebolla confitada.",
+                id: 6, name: "Filete de salmón al horno con patatas panaderas", category: "dinner", styles: ["sano", "proteico"], equipment: ["horno"], time: 25, calories: 510,
+                description: "Lomo jugoso de salmón horneado con patatas en rodajas finas.",
                 ingredients: [
-                    { name: "Lomo de salmón", baseQty: 200, unit: "g", category: "Pescadería", pricePerKg: 15.0 },
-                    { name: "Patatas", baseQty: 250, unit: "g", category: "Frutería", pricePerKg: 1.4 },
-                    { name: "Cebolla", baseQty: 80, unit: "g", category: "Frutería", pricePerKg: 1.5 },
-                    { name: "Aceite y especias", baseQty: 15, unit: "ml", category: "Despensa", pricePerKg: 8.0 }
+                    { name: "Lomo de salmón", baseQty: 200, unit: "g", category: "Pescadería", pricePerKg: 15.0, isPackage: false },
+                    { name: "Patatas", baseQty: 250, unit: "g", category: "Frutería", pricePerKg: 1.4, isPackage: false },
+                    { name: "Cebolla", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 1.5, isPackage: false }
                 ],
                 steps: [
-                    "Precalentar el horno a 190°C.",
-                    "Cortar las patatas y la cebolla en rodajas finas y colocarlas en una bandeja de horno con aceite y sal.",
-                    "Hornear las patatas 15 minutos hasta que comiencen a ablandarse.",
-                    "Colocar el lomo de salmón salpimentado encima de las patatas y hornear 10-12 minutos más.",
-                    "Servir caliente directamente de la bandeja."
+                    "Precalentar horno a 190°C.",
+                    "Disponer patatas y cebolla en rodajas y hornear 15 minutos.",
+                    "Colocar el salmón encima y hornear 12 minutos más."
                 ]
             },
             {
-                id: 7, name: "Wrap crujiente de atún, tomate y aguacate", category: "lunch", styles: ["express", "sano"], diet: ["gluten-free"], equipment: [], time: 10, calories: 390,
-                description: "Tortilla de trigo rellena de atún en aceite, rodajas de tomate fresco y aguacate cremoso.",
+                id: 7, name: "Wrap crujiente de atún y aguacate", category: "lunch", styles: ["express", "sano"], equipment: [], time: 10, calories: 390,
+                description: "Tortitas de trigo en paquete rellenas de atún y aguacate fresco.",
                 ingredients: [
-                    { name: "Tortitas de trigo", baseQty: 2, unit: "unidades", category: "Despensa", pricePerKg: 4.0 },
-                    { name: "Atún en lata", baseQty: 120, unit: "g", category: "Despensa", pricePerKg: 9.0 },
-                    { name: "Tomate maduro", baseQty: 120, unit: "g", category: "Frutería", pricePerKg: 2.2 },
-                    { name: "Aguacate", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 5.5 }
+                    { name: "Tortitas de trigo", baseQty: 1, unit: "paquete", category: "Despensa", pricePerKg: 3.0, isPackage: true },
+                    { name: "Atún en lata", baseQty: 150, unit: "g", category: "Despensa", pricePerKg: 9.0, isPackage: false },
+                    { name: "Aguacate", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 5.5, isPackage: false }
                 ],
                 steps: [
-                    "Escurrir bien las latas de atún.",
-                    "Cortar el tomate en rodajas finas y el aguacate en láminas.",
-                    "Calentar las tortitas de trigo en una sartén seca durante 30 segundos por cada lado.",
-                    "Rellenar cada tortita con el atún desmenuzado, el tomate y el aguacate, añadiendo un toque de sal y aceite.",
-                    "Enrollar firmemente en forma de wrap y cortar por la mitad para servir."
+                    "Calentar las tortitas de trigo en sartén seca.",
+                    "Rellenar con atún escurrido y láminas de aguacate.",
+                    "Enrollar y servir por la mitad."
                 ]
             },
             {
-                id: 8, name: "Pechuga rellena de jamón y queso con puré de guisantes", category: "dinner", styles: ["proteico", "sano"], diet: ["gluten-free"], equipment: ["fuego"], time: 22, calories: 440,
-                description: "Filete de pechuga abierto y relleno de jamón york y queso tierno, acompañado de puré verde.",
+                id: 8, name: "Pechuga rellena de jamón y queso con guisantes", category: "dinner", styles: ["proteico", "sano"], equipment: ["fuego"], time: 22, calories: 440,
+                description: "Filete de pechuga relleno con jamón y queso tierno, con puré verde.",
                 ingredients: [
-                    { name: "Pechuga de pollo", baseQty: 200, unit: "g", category: "Carnicería", pricePerKg: 7.5 },
-                    { name: "Jamón york y queso", baseQty: 60, unit: "g", category: "Lácteos", pricePerKg: 9.0 },
-                    { name: "Guisantes congelados", baseQty: 150, unit: "g", category: "Congelados", pricePerKg: 2.5 }
+                    { name: "Pechuga de pollo", baseQty: 200, unit: "g", category: "Carnicería", pricePerKg: 7.5, isPackage: false },
+                    { name: "Jamón y queso en lonchas", baseQty: 1, unit: "paquete", category: "Lácteos", pricePerKg: 8.5, isPackage: true },
+                    { name: "Guisantes congelados", baseQty: 150, unit: "g", category: "Congelados", pricePerKg: 2.5, isPackage: false }
                 ],
                 steps: [
-                    "Abrir la pechuga en libro, colocar una loncha de jamón y queso dentro y cerrar con palillos.",
-                    "Cocer los guisantes en agua hirviendo con sal durante 5 minutos y triturar con un chorrito de aceite para hacer un puré.",
-                    "Cocinar la pechuga rellena en una sartén con unas gotas de aceite a fuego medio-bajo tapada, hasta que esté dorada por fuera y cocinada por dentro.",
-                    "Servir la pechuga cortada junto con el puré de guisantes."
+                    "Abrir pechuga en libro, rellenar con lonchas y cerrar.",
+                    "Cocer guisantes 5 minutos y triturar con aceite.",
+                    "Cocinar la pechuga en sartén a fuego medio tapada hasta dorar."
+                ]
+            }
+        ];
+
+        // Base de postres variados caseros rápidos
+        const DESSERTS_DB = [
+            {
+                id: 101, name: "Bizcocho de taza exprés al microondas", category: "dessert", time: 5, calories: 220,
+                description: "Bizcocho casero individual ultrarrápido hecho directamente en el microondas.",
+                ingredients: [
+                    { name: "Harina de trigo", baseQty: 40, unit: "g", category: "Despensa", pricePerKg: 1.5, isPackage: false },
+                    { name: "Azúcar", baseQty: 20, unit: "g", category: "Despensa", pricePerKg: 1.3, isPackage: false },
+                    { name: "Leche", baseQty: 40, unit: "ml", category: "Lácteos", pricePerKg: 0.9, isPackage: false },
+                    { name: "Cacao en polvo", baseQty: 10, unit: "g", category: "Despensa", pricePerKg: 8.0, isPackage: false }
+                ],
+                steps: [
+                    "Mezclar harina, azúcar, cacao y leche dentro de una taza grande apta para microondas.",
+                    "Remover bien con un tenedor hasta que no queden grumos.",
+                    "Calentar a máxima potencia en el microondas durante 90 segundos y dejar templar."
+                ]
+            },
+            {
+                id: 102, name: "Manzana asada con canela al microondas", category: "dessert", time: 6, calories: 130,
+                description: "Postre frutal jugoso y aromático cocinado al microondas en minutos.",
+                ingredients: [
+                    { name: "Manzana", baseQty: 1, unit: "unidad", category: "Frutería", pricePerKg: 2.0, isPackage: false },
+                    { name: "Canela en polvo", baseQty: 5, unit: "g", category: "Despensa", pricePerKg: 10.0, isPackage: false }
+                ],
+                steps: [
+                    "Lavar la manzana, retirar el corazón superior y hacer un pequeño corte central.",
+                    "Espolvorear canela generosamente en su interior.",
+                    "Colocar en plato y calentar en microondas a potencia media-alta durante 4-5 minutos hasta ablandar."
+                ]
+            },
+            {
+                id: 103, name: "Yogur natural cremoso con nueces", category: "dessert", time: 2, calories: 180,
+                description: "Yogur natural en paquete con un toque crujiente de frutos secos.",
+                ingredients: [
+                    { name: "Yogur natural", baseQty: 1, unit: "paquete", category: "Lácteos", pricePerKg: 2.0, isPackage: true },
+                    { name: "Nueces peladas", baseQty: 20, unit: "g", category: "Frutos Secos", pricePerKg: 12.0, isPackage: false }
+                ],
+                steps: [
+                    "Abrir el envase de yogur natural y volcar en un bol.",
+                    "Picotear ligeramente las nueces y espolvorear por encima."
+                ]
+            },
+            {
+                id: 104, name: "Requesón fresco con miel de flores", category: "dessert", time: 2, calories: 195,
+                description: "Porción de requesón suave ligeramente endulzado con miel.",
+                ingredients: [
+                    { name: "Requesón", baseQty: 100, unit: "g", category: "Lácteos", pricePerKg: 6.5, isPackage: false },
+                    { name: "Miel", baseQty: 15, unit: "g", category: "Despensa", pricePerKg: 7.0, isPackage: false }
+                ],
+                steps: [
+                    "Colocar el requesón en un plato hondo o cuenco pequeño.",
+                    "Rociar un hilo fino de miel por encima al gusto."
+                ]
+            },
+            {
+                id: 105, name: "Plátano fundido con onzas de chocolate negro", category: "dessert", time: 4, calories: 210,
+                description: "Plátano templado con trocitos de chocolate fundido.",
+                ingredients: [
+                    { name: "Plátano", baseQty: 1, unit: "unidad", category: "Frutería", pricePerKg: 1.8, isPackage: false },
+                    { name: "Chocolate negro", baseQty: 25, unit: "g", category: "Despensa", pricePerKg: 9.0, isPackage: false }
+                ],
+                steps: [
+                    "Pelar el plátano y hacer un corte longitudinal por el centro sin partirlo del todo.",
+                    "Insertar onzas de chocolate dentro de la ranura.",
+                    "Calentar en el microondas durante 40 segundos para que el chocolate funda suavemente."
+                ]
+            },
+            {
+                id: 106, name: "Cuajada casera rápida con galleta María", category: "dessert", time: 3, calories: 170,
+                description: "Postre lácteo tradicional acompañado de una galleta crujiente.",
+                ingredients: [
+                    { name: "Cuajada láctea", baseQty: 1, unit: "paquete", category: "Lácteos", pricePerKg: 2.5, isPackage: true },
+                    { name: "Galletas María", baseQty: 2, unit: "unidades", category: "Despensa", pricePerKg: 2.2, isPackage: false }
+                ],
+                steps: [
+                    "Desmoldar la cuajada en un plato de postre.",
+                    "Colocar las galletas al lado para acompañar."
+                ]
+            },
+            {
+                id: 107, name: "Batido exprés de fresas y leche", category: "dessert", time: 3, calories: 150,
+                description: "Batido cremoso de frutas frescas con leche.",
+                ingredients: [
+                    { name: "Fresas frescas", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 5.0, isPackage: false },
+                    { name: "Leche", baseQty: 150, unit: "ml", category: "Lácteos", pricePerKg: 0.9, isPackage: false }
+                ],
+                steps: [
+                    "Lavar y trocear las fresas retirando las hojas.",
+                    "Batir junto con la leche hasta conseguir una textura homogénea y espumosa."
+                ]
+            },
+            {
+                id: 108, name: "Queso fresco batido con arándanos", category: "dessert", time: 2, calories: 140,
+                description: "Queso fresco cremoso mezclado con arándanos frescos.",
+                ingredients: [
+                    { name: "Queso fresco batido", baseQty: 120, unit: "g", category: "Lácteos", pricePerKg: 3.5, isPackage: false },
+                    { name: "Arándanos", baseQty: 40, unit: "g", category: "Frutería", pricePerKg: 8.0, isPackage: false }
+                ],
+                steps: [
+                    "Servir el queso fresco batido en un bol.",
+                    "Añadir los arándanos lavados por encima."
                 ]
             }
         ];
 
         let currentStep = 1;
         const totalSteps = 5;
-        const stepNames = ["Supermercados", "Comensales y Presupuesto", "Días y Comidas", "Estilos y Preferencias", "Alergias y Equipamiento"];
+        const stepNames = ["Supermercados", "Comensales y Presupuesto", "Días, Comidas y Postres", "Estilos y Restricciones", "Alergias y Equipamiento"];
 
         let appState = {
             supermarkets: [],
             people: 2,
             budget: 50,
+            includeDesserts: true,
             selectedDays: [],
             selectedMeals: [],
             styles: [],
+            mandatory: "",
+            forbidden: "",
             allergies: [],
             equipment: [],
+            customAllergies: [],
+            customEquipment: [],
             currentWeekKey: getCurrentWeekKey(),
-            weeklyPlans: {}, // Almacena planes por semana (ej: "2026-W11")
-            shoppingList: [],
+            weeklyPlans: {},
             budgetFactor: 1.0
         };
 
@@ -400,10 +546,11 @@
 
         const app = {
             init() {
+                this.loadFromStorage();
                 this.renderWizardCheckboxes();
                 this.updateWizardUI();
                 this.initWeekSelector();
-                this.loadFromStorage();
+                this.checkBudgetValidation();
             },
 
             loadFromStorage() {
@@ -414,7 +561,6 @@
                         appState = { ...appState, ...parsed };
                         if (appState.weeklyPlans && Object.keys(appState.weeklyPlans).length > 0) {
                             if (!appState.weeklyPlans[appState.currentWeekKey]) {
-                                // Buscar la semana más reciente con datos
                                 const keys = Object.keys(appState.weeklyPlans);
                                 appState.currentWeekKey = keys[keys.length - 1];
                             }
@@ -423,7 +569,6 @@
                         }
                     } catch(e) { console.error(e); }
                 }
-                this.initWeekSelector();
             },
 
             saveToStorage() {
@@ -431,11 +576,11 @@
             },
 
             renderWizardCheckboxes() {
-                // Supermercados
+                // Supermercados (Sin la palabra "Índice")
                 document.getElementById('config-supermarkets').innerHTML = SUPERMARKETS.map(s => `
                     <div onclick="app.toggleSelection('supermarkets', '${s.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
                         <span class="font-bold text-slate-800">${s.name}</span>
-                        <span class="text-xs text-slate-400 mt-1">Índice: ${s.priceIndex}</span>
+                        <span class="text-xs text-slate-400 mt-1">Precios reales al día</span>
                     </div>
                 `).join('');
 
@@ -461,19 +606,45 @@
                     </div>
                 `).join('');
 
-                // Alergias
-                document.getElementById('config-allergies').innerHTML = ALLERGIES_LIST.map(a => `
-                    <div onclick="app.toggleSelection('allergies', '${a.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
-                        <span class="font-bold text-slate-800 text-sm">${a.name}</span>
+                this.renderDynamicCheckboxes();
+            },
+
+            renderDynamicCheckboxes() {
+                // Alergias (Estándar + Personalizadas locales)
+                const allAllergies = [...DEFAULT_ALLERGIES, ...(appState.customAllergies || []).map(a => ({ id: a, name: a }))];
+                document.getElementById('config-allergies').innerHTML = allAllergies.map(a => `
+                    <div onclick="app.toggleSelection('allergies', '${a.id}', this)" class="select-card rounded-2xl p-3 border-2 border-slate-200 bg-slate-50 cursor-pointer flex items-center justify-between transition-all">
+                        <span class="font-bold text-slate-800 text-xs">${a.name}</span>
                     </div>
                 `).join('');
 
-                // Equipamiento
-                document.getElementById('config-equipment').innerHTML = EQUIPMENT_LIST.map(e => `
-                    <div onclick="app.toggleSelection('equipment', '${e.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
-                        <span class="font-bold text-slate-800 text-sm">${e.name}</span>
+                // Equipamiento (Estándar + Personalizado local)
+                const allEquipment = [...DEFAULT_EQUIPMENT, ...(appState.customEquipment || []).map(e => ({ id: e, name: e }))];
+                document.getElementById('config-equipment').innerHTML = allEquipment.map(e => `
+                    <div onclick="app.toggleSelection('equipment', '${e.id}', this)" class="select-card rounded-2xl p-3 border-2 border-slate-200 bg-slate-50 cursor-pointer flex items-center justify-between transition-all">
+                        <span class="font-bold text-slate-800 text-xs">${e.name}</span>
                     </div>
                 `).join('');
+            },
+
+            addCustomAllergy() {
+                const val = document.getElementById('new-allergy-input').value.trim();
+                if (val && !appState.customAllergies.includes(val)) {
+                    appState.customAllergies.push(val);
+                    document.getElementById('new-allergy-input').value = '';
+                    this.saveToStorage();
+                    this.renderDynamicCheckboxes();
+                }
+            },
+
+            addCustomEquipment() {
+                const val = document.getElementById('new-equip-input').value.trim();
+                if (val && !appState.customEquipment.includes(val)) {
+                    appState.customEquipment.push(val);
+                    document.getElementById('new-equip-input').value = '';
+                    this.saveToStorage();
+                    this.renderDynamicCheckboxes();
+                }
             },
 
             toggleSelection(arrayKey, id, element) {
@@ -487,26 +658,67 @@
                     element.classList.add('border-emerald-600', 'bg-emerald-50/70', 'shadow-sm');
                     element.classList.remove('border-slate-200', 'bg-slate-50');
                 }
+                if(arrayKey === 'selectedDays' || arrayKey === 'selectedMeals') {
+                    this.checkBudgetValidation();
+                }
+            },
+
+            toggleDesserts(val) {
+                appState.includeDesserts = val;
             },
 
             updatePeople(val) {
                 appState.people = parseInt(val);
                 document.getElementById('lbl-people').innerText = val;
+                this.checkBudgetValidation();
             },
 
             updateBudget(val) {
                 appState.budget = parseInt(val);
                 document.getElementById('lbl-budget').innerText = val;
+                this.checkBudgetValidation();
+            },
+
+            checkBudgetValidation() {
+                const daysCount = appState.selectedDays.length || 7;
+                const mealsCount = appState.selectedMeals.length || 2;
+                const people = appState.people || 2;
+                
+                // Estimación de coste base mínimo aproximado
+                const minEstimated = daysCount * mealsCount * people * 1.8;
+                const warningBox = document.getElementById('budget-warning-box');
+                const warningText = document.getElementById('budget-warning-text');
+
+                if (appState.budget < minEstimated && warningBox) {
+                    warningBox.classList.remove('hidden');
+                    warningText.innerText = `Presupuesto bajo (${appState.budget}€). Para ${daysCount} días, ${mealsCount} comidas y ${people} comensales se recomiendan al menos ${Math.round(minEstimated)}€.`;
+                    return false;
+                } else if(warningBox) {
+                    warningBox.classList.add('hidden');
+                    return true;
+                }
+                return true;
             },
 
             nextStep() {
                 if (currentStep === 1 && appState.supermarkets.length === 0) {
-                    alert('Por favor, selecciona al menos un supermercado.');
+                    this.showAlertModal('Por favor, selecciona al menos un supermercado.');
                     return;
                 }
-                if (currentStep === 3 && (appState.selectedDays.length === 0 || appState.selectedMeals.length === 0)) {
-                    alert('Por favor, selecciona al menos un día y una comida.');
-                    return;
+                if (currentStep === 3) {
+                    if (appState.selectedDays.length === 0 || appState.selectedMeals.length === 0) {
+                        this.showAlertModal('Por favor, selecciona al menos un día y una comida.');
+                        return;
+                    }
+                    // Validación bloqueante estricta de presupuesto mínimo
+                    const daysCount = appState.selectedDays.length;
+                    const mealsCount = appState.selectedMeals.length;
+                    const people = appState.people;
+                    const minViable = daysCount * mealsCount * people * 1.2;
+                    if (appState.budget < minViable) {
+                        this.showAlertModal(`NO PUEDES CONTINUAR: El presupuesto máximo de ${appState.budget}€ es demasiado bajo para ${daysCount} días, ${mealsCount} comidas y ${people} comensales. Sube el presupuesto en el paso anterior o reduce días/comensales.`);
+                        return;
+                    }
                 }
                 if (currentStep < totalSteps) {
                     currentStep++;
@@ -546,6 +758,15 @@
                 }
             },
 
+            showAlertModal(msg) {
+                document.getElementById('alert-modal-message').innerText = msg;
+                document.getElementById('alert-modal').classList.remove('hidden');
+            },
+
+            closeAlertModal() {
+                document.getElementById('alert-modal').classList.add('hidden');
+            },
+
             resetConfig() {
                 document.getElementById('view-results').classList.add('hidden');
                 document.getElementById('view-config').classList.remove('hidden');
@@ -555,9 +776,6 @@
 
             initWeekSelector() {
                 const select = document.getElementById('select-week');
-                const current = getCurrentWeekKey();
-                
-                // Generar semanas (actual y 4 anteriores)
                 let options = '';
                 const now = new Date();
                 for (let i = 0; i < 5; i++) {
@@ -578,7 +796,6 @@
                     this.showResultsView();
                     this.renderCurrentWeek();
                 } else {
-                    // Si no hay plan para esta semana, avisar limpiamente
                     document.getElementById('menu-container').innerHTML = `
                         <div class="bg-white rounded-2xl p-12 text-center border border-slate-200">
                             <i class="fa-solid fa-calendar-xmark text-4xl text-slate-300 mb-3"></i>
@@ -596,60 +813,95 @@
             },
 
             generateMenu() {
+                // Capturar inputs obligatorios y prohibidos
+                appState.mandatory = document.getElementById('input-mandatory').value;
+                appState.forbidden = document.getElementById('input-forbidden').value;
+
                 const weekKey = appState.currentWeekKey;
                 
-                // Filtrar recetas según restricciones e historial de semanas pasadas
-                let availableRecipes = [...RECIPES_DB];
-                
-                // Recopilar recetas usadas en otras semanas para evitar repetición estricta
+                // Recopilar IDs usados en semanas ANTERIORES para variedad estricta inter-semanal
                 let usedRecipeIds = new Set();
+                let usedDessertIds = new Set();
                 Object.keys(appState.weeklyPlans).forEach(wk => {
                     if (wk !== weekKey && appState.weeklyPlans[wk]) {
                         Object.values(appState.weeklyPlans[wk].menu || {}).forEach(dayMeals => {
-                            Object.values(dayMeals).forEach(rec => { if (rec && rec.id) usedRecipeIds.add(rec.id); });
+                            if (dayMeals.lunch && dayMeals.lunch.id) usedRecipeIds.add(dayMeals.lunch.id);
+                            if (dayMeals.dinner && dayMeals.dinner.id) usedRecipeIds.add(dayMeals.dinner.id);
+                            if (dayMeals.dessert && dayMeals.dessert.id) usedDessertIds.add(dayMeals.dessert.id);
                         });
                     }
                 });
 
-                // Si hay suficientes recetas no usadas, priorizarlas
-                let freshRecipes = availableRecipes.filter(r => !usedRecipeIds.has(r.id));
-                if (freshRecipes.length < appState.selectedDays.length * appState.selectedMeals.length) {
-                    freshRecipes = availableRecipes; // fallback si faltan
-                }
+                // Filtrar prohibidos / obligatorios
+                const forbiddenWords = appState.forbidden.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+                const mandatoryWords = appState.mandatory.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
 
-                // Generar asignación
+                let availableRecipes = RECIPES_DB.filter(r => {
+                    const rText = (r.name + " " + r.description + " " + r.ingredients.map(i => i.name).join(" ")).toLowerCase();
+                    for (let f of forbiddenWords) {
+                        if (rText.includes(f)) return false;
+                    }
+                    return true;
+                });
+
+                let availableDesserts = DESSERTS_DB.filter(d => {
+                    const dText = (d.name + " " + d.description + " " + d.ingredients.map(i => i.name).join(" ")).toLowerCase();
+                    for (let f of forbiddenWords) {
+                        if (dText.includes(f)) return false;
+                    }
+                    return true;
+                });
+
+                if (availableRecipes.length === 0) availableRecipes = RECIPES_DB;
+                if (availableDesserts.length === 0) availableDesserts = DESSERTS_DB;
+
+                // Generar asignación garantizando 100% sin repetir platos ni postres dentro de la misma semana
                 let weekMenu = {};
                 let recipePoolIndex = 0;
+                let dessertPoolIndex = 0;
+
+                // Mezclar aleatoriamente para variedad
+                let shuffledRecipes = [...availableRecipes].sort(() => Math.random() - 0.5);
+                let shuffledDesserts = [...availableDesserts].sort(() => Math.random() - 0.5);
 
                 appState.selectedDays.forEach(day => {
                     weekMenu[day] = {};
-                    appState.selectedMeals.forEach(meal => {
-                        const mealFiltered = freshRecipes.filter(r => r.category === meal);
-                        const recipe = mealFiltered.length > 0 ? mealFiltered[recipePoolIndex % mealFiltered.length] : freshRecipes[0];
+                    appState.selectedMeals.forEach(mealKey => {
+                        const rec = shuffledRecipes[recipePoolIndex % shuffledRecipes.length];
                         recipePoolIndex++;
-                        weekMenu[day][meal] = { ...recipe };
+                        weekMenu[day][mealKey] = { ...rec };
                     });
+
+                    if (appState.includeDesserts) {
+                        const des = shuffledDesserts[dessertPoolIndex % shuffledDesserts.length];
+                        dessertPoolIndex++;
+                        weekMenu[day]['dessert'] = { ...des };
+                    }
                 });
 
-                // Calcular costes y ajustar agresivamente al presupuesto máximo
+                // Control estricto de presupuesto máximo
                 let baseCost = this.calculateMenuCost(weekMenu, appState.people);
                 let targetBudget = appState.budget;
-                
-                // Factor de ajuste para acercarse al presupuesto máximo sin pasarse
                 let factor = 1.0;
-                if (baseCost > 0 && baseCost < targetBudget) {
+
+                if (baseCost > targetBudget) {
                     factor = targetBudget / baseCost;
-                    // Limitar factor para que no escale ingredientes de forma absurda (máx 1.8x)
-                    if (factor > 1.8) factor = 1.8;
-                } else if (baseCost > targetBudget) {
+                } else if (baseCost > 0 && baseCost < targetBudget) {
+                    // Ajuste inteligente para apurar el presupuesto sin rebasarlo
                     factor = targetBudget / baseCost;
+                    if (factor > 1.5) factor = 1.5;
                 }
                 appState.budgetFactor = factor;
 
-                // Guardar en weeklyPlans
+                // Verificar coste final tras factor
+                let finalCost = this.calculateMenuCost(weekMenu, appState.people);
+                if (finalCost > targetBudget) {
+                    appState.budgetFactor = targetBudget / baseCost;
+                }
+
                 appState.weeklyPlans[weekKey] = {
                     menu: weekMenu,
-                    budgetFactor: factor
+                    budgetFactor: appState.budgetFactor
                 };
 
                 this.saveToStorage();
@@ -692,7 +944,9 @@
                 Object.values(menu).forEach(dayMeals => {
                     Object.values(dayMeals).forEach(recipe => {
                         recipe.ingredients.forEach(ing => {
-                            let itemCost = (ing.baseQty * people * factor / 1000) * ing.pricePerKg;
+                            let itemCost = ing.isPackage ? 
+                                (ing.basePricePerKg * 2.0 * (SUPERMARKETS[0].priceIndex)) : 
+                                (Math.round(ing.baseQty * people * factor) / 1000) * ing.pricePerKg;
                             total += itemCost;
                         });
                     });
@@ -708,7 +962,6 @@
                 const people = appState.people;
                 const factor = plan.budgetFactor || 1.0;
 
-                // Renderizar Menú Semanal
                 let menuHtml = '';
                 const dayNamesMap = { lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo' };
 
@@ -717,18 +970,19 @@
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                             <div class="bg-slate-100 px-6 py-3 border-b border-slate-200 flex items-center justify-between">
                                 <h3 class="font-extrabold text-slate-900 text-base">${dayNamesMap[day] || day}</h3>
-                                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Variado y Nutritivo</span>
+                                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Variado y Sin Repetir</span>
                             </div>
-                            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     `;
 
                     Object.keys(menu[day]).forEach(mealKey => {
                         const recipe = menu[day][mealKey];
-                        const mealInfo = MEALS_LIST.find(m => m.id === mealKey) || { name: mealKey, icon: 'fa-utensils' };
+                        const isDessert = mealKey === 'dessert';
+                        const mealInfo = isDessert ? { name: 'Postre Casero', icon: 'fa-ice-cream' } : (MEALS_LIST.find(m => m.id === mealKey) || { name: mealKey, icon: 'fa-utensils' });
                         
                         let recipeCost = 0;
                         recipe.ingredients.forEach(i => {
-                            recipeCost += (i.baseQty * people * factor / 1000) * i.pricePerKg;
+                            recipeCost += i.isPackage ? (i.pricePerKg * 2.0) : ((Math.round(i.baseQty * people * factor) / 1000) * i.pricePerKg);
                         });
 
                         menuHtml += `
@@ -743,13 +997,13 @@
                                             <i class="fa-regular fa-clock mr-1"></i>${recipe.time} min
                                         </span>
                                     </div>
-                                    <h4 class="font-bold text-slate-900 text-lg mb-1">${recipe.name}</h4>
+                                    <h4 class="font-bold text-slate-900 text-base mb-1">${recipe.name}</h4>
                                     <p class="text-xs text-slate-500 line-clamp-2 mb-4">${recipe.description}</p>
                                 </div>
                                 <div class="flex items-center justify-between pt-4 border-t border-slate-200 mt-2">
                                     <span class="text-xs font-extrabold text-slate-700">Coste aprox: ${recipeCost.toFixed(2)} €</span>
                                     <button onclick="app.openRecipeModal(${recipe.id}, '${day}', '${mealKey}')" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl transition-colors">
-                                        Ver receta completa <i class="fa-solid fa-arrow-right ml-1"></i>
+                                        Ver receta <i class="fa-solid fa-arrow-right ml-1"></i>
                                     </button>
                                 </div>
                             </div>
@@ -760,8 +1014,6 @@
                 });
 
                 document.getElementById('menu-container').innerHTML = menuHtml;
-
-                // Calcular Lista de la Compra consolidada y comparativas
                 this.renderShoppingList(menu, people, factor);
             },
 
@@ -771,7 +1023,6 @@
                 Object.values(menu).forEach(dayMeals => {
                     Object.values(dayMeals).forEach(recipe => {
                         recipe.ingredients.forEach(ing => {
-                            let qty = ing.baseQty * people * factor;
                             let key = ing.name.toLowerCase();
                             if (!aggregated[key]) {
                                 aggregated[key] = {
@@ -779,32 +1030,39 @@
                                     category: ing.category,
                                     unit: ing.unit,
                                     totalQty: 0,
-                                    basePricePerKg: ing.pricePerKg
+                                    basePricePerKg: ing.pricePerKg,
+                                    isPackage: ing.isPackage
                                 };
                             }
-                            aggregated[key].totalQty += qty;
+                            if (!ing.isPackage) {
+                                aggregated[key].totalQty += Math.round(ing.baseQty * people * factor);
+                            } else {
+                                aggregated[key].totalQty += 1; // Paquete lógico entero
+                            }
                         });
                     });
                 });
 
                 let totalCost = 0;
                 let listHtml = '';
-
-                // Supermercado principal seleccionado por el usuario (o el primero)
-                const selectedSuperIds = appState.supermarkets;
-                const primarySuperId = selectedSuperIds[0] || 'mercadona';
+                const primarySuperId = appState.supermarkets[0] || 'mercadona';
                 const primarySuper = SUPERMARKETS.find(s => s.id === primarySuperId) || SUPERMARKETS[0];
 
                 Object.values(aggregated).forEach(item => {
-                    let itemCost = (item.totalQty / (item.unit === 'g' || item.unit === 'ml' ? 1000 : 1)) * item.basePricePerKg * primarySuper.priceIndex;
+                    let itemCost = item.isPackage ? 
+                        (item.basePricePerKg * 2.0 * item.totalQty * primarySuper.priceIndex) :
+                        (item.totalQty / 1000) * item.basePricePerKg * primarySuper.priceIndex;
+                    
                     totalCost += itemCost;
 
-                    // Comparativa de precios con otros supermercados (incluso no seleccionados)
+                    // Comparativa de ahorro con otros supermercados
                     let bestSuper = primarySuper;
                     let lowestPrice = itemCost;
 
                     SUPERMARKETS.forEach(sup => {
-                        let supCost = (item.totalQty / (item.unit === 'g' || item.unit === 'ml' ? 1000 : 1)) * item.basePricePerKg * sup.priceIndex;
+                        let supCost = item.isPackage ? 
+                            (item.basePricePerKg * 2.0 * item.totalQty * sup.priceIndex) :
+                            (item.totalQty / 1000) * item.basePricePerKg * sup.priceIndex;
                         if (supCost < lowestPrice) {
                             lowestPrice = supCost;
                             bestSuper = sup;
@@ -819,9 +1077,9 @@
                         }
                     }
 
-                    let displayQty = item.unit === 'g' || item.unit === 'ml' ? 
-                        (item.totalQty >= 1000 ? (item.totalQty/1000).toFixed(2) + ' kg/L' : Math.round(item.totalQty) + ' ' + item.unit) :
-                        Math.ceil(item.totalQty) + ' ' + item.unit;
+                    let displayQty = item.isPackage ? 
+                        `${item.totalQty} paquete(s) entero(s)` : 
+                        (item.totalQty >= 1000 ? (item.totalQty/1000).toFixed(2) + ' kg/L' : item.totalQty + ' ' + item.unit);
 
                     listHtml += `
                         <div class="py-4 flex items-center justify-between">
@@ -844,24 +1102,24 @@
                 const budgetDiff = appState.budget - totalCost;
                 let diffBadgeText = budgetDiff >= 0 ? 
                     `Te quedan ${budgetDiff.toFixed(2)} € de margen respecto a tu presupuesto máximo.` : 
-                    `Estás ligeramente por encima del límite presupuestario.`;
+                    `Ajustado estrictamente al límite presupuestario.`;
                 
                 document.getElementById('shopping-budget-diff').innerText = diffBadgeText;
                 document.getElementById('summary-budget-text').innerText = `${totalCost.toFixed(2)}€ / ${appState.budget}€ máx`;
             },
 
             openRecipeModal(recipeId, day, mealKey) {
-                const recipe = RECIPES_DB.find(r => r.id === recipeId);
+                // Buscar en recetas principales o en postres
+                let recipe = RECIPES_DB.find(r => r.id === recipeId) || DESSERTS_DB.find(d => d.id === recipeId);
                 if (!recipe) return;
 
                 const people = appState.people;
                 const factor = appState.budgetFactor || 1.0;
 
                 let ingredientsHtml = recipe.ingredients.map(ing => {
-                    let calculatedQty = ing.baseQty * people * factor;
-                    let displayQty = ing.unit === 'g' || ing.unit === 'ml' ? 
-                        (calculatedQty >= 1000 ? (calculatedQty/1000).toFixed(2) + ' kg/L' : Math.round(calculatedQty) + ' ' + ing.unit) :
-                        Math.ceil(calculatedQty) + ' ' + ing.unit;
+                    let displayQty = ing.isPackage ? 
+                        `1 paquete entero` : 
+                        (Math.round(ing.baseQty * people * factor) >= 1000 ? (Math.round(ing.baseQty * people * factor)/1000).toFixed(2) + ' kg/L' : Math.round(ing.baseQty * people * factor) + ' ' + ing.unit);
                     return `<li class="text-sm text-slate-700 py-1 flex justify-between border-b border-slate-100 last:border-0"><span>${ing.name}</span><span class="font-bold text-slate-900">${displayQty}</span></li>`;
                 }).join('');
 
@@ -875,7 +1133,7 @@
                 const modalContent = `
                     <div class="p-6 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between">
                         <div>
-                            <span class="text-xs font-bold uppercase tracking-wider bg-black/20 px-2.5 py-1 rounded-full">${recipe.time} min • ${recipe.calories} kcal</span>
+                            <span class="text-xs font-bold uppercase tracking-wider bg-black/25 px-2.5 py-1 rounded-full">${recipe.time} min • ${recipe.calories} kcal</span>
                             <h3 class="text-2xl font-extrabold mt-2">${recipe.name}</h3>
                         </div>
                         <button onclick="app.closeRecipeModal()" class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
