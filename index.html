@@ -3,150 +3,910 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MenúFácil Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>MenúFácil Pro - Planificador Inteligente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
-    <div id="app" class="max-w-6xl mx-auto p-4 sm:p-6">
-        <header class="flex flex-col sm:flex-row justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-emerald-700 flex items-center gap-2">
-                    <i class="fa-solid fa-utensils"></i> MenúFácil Pro
-                </h1>
-                <p class="text-slate-500 text-sm">Tu planificador inteligente de menús y compras con aislamiento por dispositivo.</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                    <span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Sincronizado
-                </span>
-            </div>
-        </header>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-        <main class="space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <h2 class="text-lg font-semibold mb-4 text-slate-700">Planificador del Menú Diario</h2>
-                <div id="menu-days-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Las tarjetas del menú se renderizan dinámicamente aquí -->
-                    <div class="p-6 border border-slate-200 rounded-xl bg-slate-50 text-center">
-                        <i class="fa-solid fa-spinner animate-spin text-emerald-600 text-2xl mb-2"></i>
-                        <p class="text-sm text-slate-600">Cargando menús optimizados...</p>
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight text-slate-900">MenúFácil Pro</h1>
+                    <p class="text-xs text-slate-500">Planificador inteligente con aislamiento local</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="app.resetConfig()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-lg transition-colors flex items-center space-x-1.5">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Configuración</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Wizard de Configuración Inicial (Nada preseleccionado) -->
+        <section id="view-config" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 px-8 py-6 text-white">
+                <h2 class="text-2xl font-bold">Configura tu Planificador</h2>
+                <p class="text-emerald-100 text-sm mt-1">Selecciona tus preferencias manualmente para crear un menú a medida.</p>
+                <div class="flex items-center space-x-2 mt-4 text-xs font-semibold bg-black/20 w-fit px-3 py-1 rounded-full">
+                    <span id="step-indicator">Paso 1 de 5</span>
+                </div>
+            </div>
+
+            <div class="p-8">
+                <!-- Paso 1: Supermercados -->
+                <div class="wizard-step" data-step="1">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">1. ¿Qué supermercados tienes cerca?</h3>
+                    <p class="text-sm text-slate-500 mb-6">Marca al menos uno para calcular precios y comparativas.</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" id="config-supermarkets"></div>
+                </div>
+
+                <!-- Paso 2: Comensales y Presupuesto -->
+                <div class="wizard-step hidden" data-step="2">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">2. Comensales y Presupuesto Máximo</h3>
+                    <p class="text-sm text-slate-500 mb-6">Ajusta los comensales y el tope de dinero que no deseas rebasar.</p>
+                    <div class="space-y-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Número de comensales: <span id="lbl-people" class="text-emerald-600 font-bold">2</span></label>
+                            <input type="range" id="input-people" min="1" max="8" value="2" class="w-full accent-emerald-600" oninput="app.updatePeople(this.value)">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Presupuesto máximo (€): <span id="lbl-budget" class="text-emerald-600 font-bold">50</span> €</label>
+                            <input type="range" id="input-budget" min="20" max="200" step="5" value="50" class="w-full accent-emerald-600" oninput="app.updateBudget(this.value)">
+                            <p class="text-xs text-slate-500 mt-1">El sistema ajustará los platos para acercarse al máximo posible sin pasarse.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paso 3: Días y Comidas -->
+                <div class="wizard-step hidden" data-step="3">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">3. Días y Comidas a Planificar</h3>
+                    <p class="text-sm text-slate-500 mb-6">Selecciona manualmente los días y las comidas que deseas incluir.</p>
+                    <div class="mb-4">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Comidas</h4>
+                        <div class="grid grid-cols-2 gap-3" id="config-meals"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Días de la semana</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="config-days"></div>
+                    </div>
+                </div>
+
+                <!-- Paso 4: Estilos y Preferencias -->
+                <div class="wizard-step hidden" data-step="4">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">4. Estilos de Cocina y Preferencias</h3>
+                    <p class="text-sm text-slate-500 mb-6">Selecciona los estilos que te apetezcan (sin selecciones por defecto).</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="config-styles"></div>
+                </div>
+
+                <!-- Paso 5: Alergias y Equipamiento -->
+                <div class="wizard-step hidden" data-step="5">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">5. Alergias y Equipamiento de Cocina</h3>
+                    <p class="text-sm text-slate-500 mb-6">Indica restricciones o electrodomésticos disponibles (opcional).</p>
+                    <div class="mb-6">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Alergias / Restricciones</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="config-allergies"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Electrodomésticos</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="config-equipment"></div>
+                    </div>
+                </div>
+
+                <!-- Botones de Navegación Wizard -->
+                <div class="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
+                    <button id="btn-prev" onclick="app.prevStep()" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-50 hidden transition-colors">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Anterior
+                    </button>
+                    <div class="ml-auto flex space-x-3">
+                        <button id="btn-next" onclick="app.nextStep()" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md transition-colors">
+                            Siguiente <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                        <button id="btn-finish" onclick="app.generateMenu()" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md hidden transition-colors">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Generar mi Menú
+                        </button>
                     </div>
                 </div>
             </div>
-        </main>
+        </section>
+
+        <!-- Vista de Resultados (Menú y Lista de Compra) -->
+        <section id="view-results" class="hidden space-y-6">
+            
+            <!-- Barra superior de gestión y selector de semana -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Semana Activa / Historial</label>
+                        <select id="select-week" onchange="app.changeWeek(this.value)" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl px-3 py-2 font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        </select>
+                    </div>
+                    <div class="hidden sm:block">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Presupuesto Ajustado</span>
+                        <div class="text-sm font-extrabold text-slate-900" id="summary-budget-text">0€ / 0€ máx</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <div class="flex bg-slate-100 p-1 rounded-xl">
+                        <button onclick="app.switchTab('menu')" id="tab-btn-menu" class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-white text-slate-900 shadow-sm">Menú Semanal</button>
+                        <button onclick="app.switchTab('shopping')" id="tab-btn-shopping" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:text-slate-900">Lista de Compra</button>
+                    </div>
+                    <button onclick="app.regenerateCurrentMenu()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-4 py-2 rounded-xl text-sm transition-colors flex items-center space-x-2">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span class="hidden sm:inline">Nuevo Menú</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenido de Pestaña: Menú Semanal -->
+            <div id="tab-content-menu" class="space-y-6">
+                <div id="menu-container" class="space-y-6"></div>
+            </div>
+
+            <!-- Contenido de Pestaña: Lista de Compra -->
+            <div id="tab-content-shopping" class="hidden space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">Lista de la Compra Optimizada</h3>
+                            <p class="text-sm text-slate-500">Cantidades calculadas para tus comensales y presupuesto. Incluye alertas de ahorro en otros supermercados.</p>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl text-right">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 block">Gasto Estimado Total</span>
+                            <span class="text-xl font-extrabold text-emerald-800" id="shopping-total-cost">0.00 €</span>
+                            <span class="text-xs text-emerald-600 block mt-0.5" id="shopping-budget-diff"></span>
+                        </div>
+                    </div>
+                    <div id="shopping-list-container" class="divide-y divide-slate-100"></div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Modal de Receta Detallada -->
+    <div id="recipe-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200" id="recipe-modal-content">
+        </div>
     </div>
 
+    <!-- Script de la Aplicación -->
     <script>
-        const RECIPES_DB = {
-            lunch: [
-                {
-                    name: "Tortilla de patatas y cebolla tradicional",
-                    description: "La reina de la cocina casera española.",
-                    time: 25,
-                    ingredients: [
-                        { name: "Patatas", baseQty: 639, unit: "g", pricePerKg: 2.10 },
-                        { name: "Huevos", baseQty: 6, unit: "unidades", pricePerKg: 3.50 }
-                    ]
-                },
-                {
-                    name: "Espirales de pasta con verduras y dados de pavo",
-                    description: "Pasta rápida salteada con verduras de temporada y pavo.",
-                    time: 15,
-                    ingredients: [
-                        { name: "Espirales de pasta", baseQty: 227, unit: "g", pricePerKg: 1.80 },
-                        { name: "Jamón cocido / pavo", baseQty: 170, unit: "g", pricePerKg: 7.00 }
-                    ]
-                }
-            ],
-            dinner: [
-                {
-                    name: "Pechuga de pollo a la plancha con puré de patata casero",
-                    description: "Una receta clásica, ligera y rica en proteínas.",
-                    time: 20,
-                    ingredients: [
-                        { name: "Pechuga de pollo", baseQty: 312, unit: "g", pricePerKg: 6.50 },
-                        { name: "Patatas", baseQty: 497, unit: "g", pricePerKg: 2.10 }
-                    ]
-                }
-            ]
-        };
+        const SUPERMARKETS = [
+            { id: 'mercadona', name: 'Mercadona', priceIndex: 1.0 },
+            { id: 'carrefour', name: 'Carrefour', priceIndex: 1.04 },
+            { id: 'lidl', name: 'Lidl', priceIndex: 0.96 },
+            { id: 'aldi', name: 'Aldi', priceIndex: 0.97 },
+            { id: 'dia', name: 'Dia', priceIndex: 0.99 },
+            { id: 'consum', name: 'Consum', priceIndex: 1.03 }
+        ];
+
+        const MEALS_LIST = [
+            { id: 'lunch', name: 'Comida (Mediodía)', icon: 'fa-sun' },
+            { id: 'dinner', name: 'Cenas', icon: 'fa-moon' }
+        ];
+
+        const DAYS_LIST = [
+            { id: 'lunes', name: 'Lunes' },
+            { id: 'martes', name: 'Martes' },
+            { id: 'miercoles', name: 'Miércoles' },
+            { id: 'jueves', name: 'Jueves' },
+            { id: 'viernes', name: 'Viernes' },
+            { id: 'sabado', name: 'Sábado' },
+            { id: 'domingo', name: 'Domingo' }
+        ];
+
+        const STYLES_LIST = [
+            { id: 'proteico', name: 'Proteico' },
+            { id: 'bajo-calorias', name: 'Bajo en calorías' },
+            { id: 'sano', name: 'Sano' },
+            { id: 'express', name: 'Exprés (<20 min)' },
+            { id: 'economico', name: 'Económico' }
+        ];
+
+        const ALLERGIES_LIST = [
+            { id: 'gluten', name: 'Sin Gluten' },
+            { id: 'lacteos', name: 'Sin Lácteos' },
+            { id: 'frutos-secos', name: 'Sin Frutos Secos' },
+            { id: 'marisco', name: 'Sin Marisco' }
+        ];
+
+        const EQUIPMENT_LIST = [
+            { id: 'microondas', name: 'Microondas' },
+            { id: 'horno', name: 'Horno' },
+            { id: 'fuego', name: 'Fuego / Vitro' },
+            { id: 'airfryer', name: 'Airfryer' }
+        ];
+
+        // Base de recetas variadas (Sin tortilla de patatas, 100% nutritivas y paso a paso)
+        const RECIPES_DB = [
+            {
+                id: 1, name: "Pechuga de pollo al limón con arroz basmati y brócoli", category: "lunch", styles: ["sano", "proteico", "express"], diet: ["gluten-free"], equipment: ["fuego"], time: 20, calories: 450,
+                description: "Pechuga tierna marinada en zumo de limón natural, acompañada de arroz aromático y floretes de brócoli al vapor.",
+                ingredients: [
+                    { name: "Pechuga de pollo", baseQty: 200, unit: "g", category: "Carnicería", pricePerKg: 7.5 },
+                    { name: "Arroz basmati", baseQty: 90, unit: "g", category: "Despensa", pricePerKg: 2.2 },
+                    { name: "Brócoli fresco", baseQty: 150, unit: "g", category: "Frutería", pricePerKg: 3.0 },
+                    { name: "Limón", baseQty: 1, unit: "unidad", category: "Frutería", pricePerKg: 1.8 }
+                ],
+                steps: [
+                    "Cocer el arroz basmati en agua hirviendo con sal durante 10-12 minutos y escurrir.",
+                    "Cortar la pechuga de pollo en filetes finos y salpimentar al gusto.",
+                    "Cocinar el pollo en una sartén con unas gotas de aceite de oliva hasta que esté dorado por ambos lados y rociar con zumo de limón al final.",
+                    "Hervir o cocinar al vapor los floretes de brócoli durante 5-6 minutos para que queden al dente.",
+                    "Servir caliente en el plato combinando el arroz, el brócoli y el pollo jugoso."
+                ]
+            },
+            {
+                id: 2, name: "Merluza a la plancha con puré de patata casero y espinacas", category: "dinner", styles: ["sano", "bajo-calorias"], diet: ["gluten-free", "marisco"], equipment: ["fuego"], time: 18, calories: 380,
+                description: "Lomos limpios de merluza dorados con un toque de ajo y perejil, acompañados de puré casero ligero y espinacas.",
+                ingredients: [
+                    { name: "Lomos de merluza", baseQty: 220, unit: "g", category: "Pescadería", pricePerKg: 11.0 },
+                    { name: "Patatas", baseQty: 200, unit: "g", category: "Frutería", pricePerKg: 1.4 },
+                    { name: "Espinacas frescas", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 4.5 },
+                    { name: "Leche desnatada", baseQty: 60, unit: "ml", category: "Lácteos", pricePerKg: 0.9 }
+                ],
+                steps: [
+                    "Pelar y cocer las patatas en agua con sal hasta que estén tiernas (unos 15 minutos).",
+                    "Escurrir las patatas, añadir un chorrito de leche y machacar con un tenedor hasta obtener un puré suave.",
+                    "Salpimentar los lomos de merluza y cocinarlos a la plancha con unas gotas de aceite 2 minutos por cada lado.",
+                    "Saltear rápidamente las espinacas frescas en la misma sartén con un ajo picado durante 1 minuto.",
+                    "Emplatar colocando una base de puré, las espinacas y el pescado encima."
+                ]
+            },
+            {
+                id: 3, name: "Salteado exprés de ternera con pimientos y cebolla", category: "lunch", styles: ["proteico", "express"], diet: ["gluten-free"], equipment: ["fuego"], time: 15, calories: 420,
+                description: "Tiras finas de ternera salteadas a fuego vivo con crujientes bastones de pimiento rojo y verde.",
+                ingredients: [
+                    { name: "Filetes de ternera finos", baseQty: 180, unit: "g", category: "Carnicería", pricePerKg: 13.5 },
+                    { name: "Pimiento rojo", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 2.8 },
+                    { name: "Pimiento verde", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 2.5 },
+                    { name: "Cebolla", baseQty: 80, unit: "g", category: "Frutería", pricePerKg: 1.5 }
+                ],
+                steps: [
+                    "Cortar los pimientos y la cebolla en tiras finas (tipo juliana).",
+                    "Cortar los filetes de ternera en tiras del mismo tamaño.",
+                    "Calentar una sartén o wok a fuego fuerte con un poco de aceite de oliva.",
+                    "Saltear las verduras durante 4-5 minutos para que queden crujientes y retirarlas.",
+                    "En la misma sartén muy caliente, saltear la ternera 2 minutos con sal y pimienta, incorporar de nuevo las verduras, mezclar y servir."
+                ]
+            },
+            {
+                id: 4, name: "Crema ligera de calabacín y quesitos con picatostes", category: "dinner", styles: ["sano", "bajo-calorias", "economico"], diet: ["gluten-free"], equipment: ["fuego", "batidora"], time: 25, calories: 290,
+                description: "Crema suave y reconfortante elaborada con calabacines frescos y un toque cremoso.",
+                ingredients: [
+                    { name: "Calabacín", baseQty: 350, unit: "g", category: "Frutería", pricePerKg: 2.0 },
+                    { name: "Cebolla", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 1.5 },
+                    { name: "Quesitos light", baseQty: 2, unit: "unidades", category: "Lácteos", pricePerKg: 6.0 },
+                    { name: "Aceite de oliva y sal", baseQty: 15, unit: "ml", category: "Despensa", pricePerKg: 8.0 }
+                ],
+                steps: [
+                    "Lavar y trocear el calabacín y la cebolla en dados medianos.",
+                    "Rehogar la cebolla y el calabacín en una cazuela con un chorrito de aceite durante 5 minutos.",
+                    "Cubrir con agua, añadir sal y cocer a fuego medio durante 15 minutos hasta que el calabacín esté blando.",
+                    "Añadir los quesitos y triturar con la batidora hasta obtener una crema fina y homogénea.",
+                    "Servir caliente en cuencos."
+                ]
+            },
+            {
+                id: 5, name: "Pavo al curry suave con verduras y cuscús", category: "lunch", styles: ["proteico", "sano"], diet: ["gluten-free"], equipment: ["fuego"], time: 20, calories: 460,
+                description: "Dados jugosos de pavo especiados con curry suave, acompañados de cuscús esponjoso.",
+                ingredients: [
+                    { name: "Pechuga de pavo", baseQty: 200, unit: "g", category: "Carnicería", pricePerKg: 8.0 },
+                    { name: "Cuscús", baseQty: 80, unit: "g", category: "Despensa", pricePerKg: 2.5 },
+                    { name: "Calabacín", baseQty: 120, unit: "g", category: "Frutería", pricePerKg: 2.0 },
+                    { name: "Curry en polvo", baseQty: 5, unit: "g", category: "Despensa", pricePerKg: 12.0 }
+                ],
+                steps: [
+                    "Preparar el cuscús vertiendo la misma cantidad de agua hirviendo con sal, tapar y dejar reposar 5 minutos.",
+                    "Cortar la pechuga de pavo en dados medianos y salpimentar.",
+                    "Cortar el calabacín en cubos pequeños y saltearlo en una sartén con aceite.",
+                    "Añadir el pavo a la sartén y cocinar hasta que esté doradito. Incorporar el curry en polvo y remover bien.",
+                    "Servir el pavo especiado sobre una cama de cuscús esponjoso."
+                ]
+            },
+            {
+                id: 6, name: "Filete de salmón al horno con patatas panaderas", category: "dinner", styles: ["sano", "proteico"], diet: ["gluten-free", "marisco"], equipment: ["horno"], time: 25, calories: 510,
+                description: "Lomo jugoso de salmón horneado con patatas en rodajas finas y cebolla confitada.",
+                ingredients: [
+                    { name: "Lomo de salmón", baseQty: 200, unit: "g", category: "Pescadería", pricePerKg: 15.0 },
+                    { name: "Patatas", baseQty: 250, unit: "g", category: "Frutería", pricePerKg: 1.4 },
+                    { name: "Cebolla", baseQty: 80, unit: "g", category: "Frutería", pricePerKg: 1.5 },
+                    { name: "Aceite y especias", baseQty: 15, unit: "ml", category: "Despensa", pricePerKg: 8.0 }
+                ],
+                steps: [
+                    "Precalentar el horno a 190°C.",
+                    "Cortar las patatas y la cebolla en rodajas finas y colocarlas en una bandeja de horno con aceite y sal.",
+                    "Hornear las patatas 15 minutos hasta que comiencen a ablandarse.",
+                    "Colocar el lomo de salmón salpimentado encima de las patatas y hornear 10-12 minutos más.",
+                    "Servir caliente directamente de la bandeja."
+                ]
+            },
+            {
+                id: 7, name: "Wrap crujiente de atún, tomate y aguacate", category: "lunch", styles: ["express", "sano"], diet: ["gluten-free"], equipment: [], time: 10, calories: 390,
+                description: "Tortilla de trigo rellena de atún en aceite, rodajas de tomate fresco y aguacate cremoso.",
+                ingredients: [
+                    { name: "Tortitas de trigo", baseQty: 2, unit: "unidades", category: "Despensa", pricePerKg: 4.0 },
+                    { name: "Atún en lata", baseQty: 120, unit: "g", category: "Despensa", pricePerKg: 9.0 },
+                    { name: "Tomate maduro", baseQty: 120, unit: "g", category: "Frutería", pricePerKg: 2.2 },
+                    { name: "Aguacate", baseQty: 100, unit: "g", category: "Frutería", pricePerKg: 5.5 }
+                ],
+                steps: [
+                    "Escurrir bien las latas de atún.",
+                    "Cortar el tomate en rodajas finas y el aguacate en láminas.",
+                    "Calentar las tortitas de trigo en una sartén seca durante 30 segundos por cada lado.",
+                    "Rellenar cada tortita con el atún desmenuzado, el tomate y el aguacate, añadiendo un toque de sal y aceite.",
+                    "Enrollar firmemente en forma de wrap y cortar por la mitad para servir."
+                ]
+            },
+            {
+                id: 8, name: "Pechuga rellena de jamón y queso con puré de guisantes", category: "dinner", styles: ["proteico", "sano"], diet: ["gluten-free"], equipment: ["fuego"], time: 22, calories: 440,
+                description: "Filete de pechuga abierto y relleno de jamón york y queso tierno, acompañado de puré verde.",
+                ingredients: [
+                    { name: "Pechuga de pollo", baseQty: 200, unit: "g", category: "Carnicería", pricePerKg: 7.5 },
+                    { name: "Jamón york y queso", baseQty: 60, unit: "g", category: "Lácteos", pricePerKg: 9.0 },
+                    { name: "Guisantes congelados", baseQty: 150, unit: "g", category: "Congelados", pricePerKg: 2.5 }
+                ],
+                steps: [
+                    "Abrir la pechuga en libro, colocar una loncha de jamón y queso dentro y cerrar con palillos.",
+                    "Cocer los guisantes en agua hirviendo con sal durante 5 minutos y triturar con un chorrito de aceite para hacer un puré.",
+                    "Cocinar la pechuga rellena en una sartén con unas gotas de aceite a fuego medio-bajo tapada, hasta que esté dorada por fuera y cocinada por dentro.",
+                    "Servir la pechuga cortada junto con el puré de guisantes."
+                ]
+            }
+        ];
+
+        let currentStep = 1;
+        const totalSteps = 5;
+        const stepNames = ["Supermercados", "Comensales y Presupuesto", "Días y Comidas", "Estilos y Preferencias", "Alergias y Equipamiento"];
 
         let appState = {
-            activeTab: 'menu',
+            supermarkets: [],
             people: 2,
-            budgetFactor: 1.0,
-            selectedDays: ['lunes', 'martes', 'miercoles'],
-            selectedMeals: ['lunch', 'dinner'],
-            currentPlan: {}
+            budget: 50,
+            selectedDays: [],
+            selectedMeals: [],
+            styles: [],
+            allergies: [],
+            equipment: [],
+            currentWeekKey: getCurrentWeekKey(),
+            weeklyPlans: {}, // Almacena planes por semana (ej: "2026-W11")
+            shoppingList: [],
+            budgetFactor: 1.0
         };
 
-        function renderMenuUI() {
-            const grid = document.getElementById('menu-days-grid');
-            if (!grid) return;
-            grid.innerHTML = "";
-            
-            const daysList = [
-                { id: 'lunes', name: 'Lunes' },
-                { id: 'martes', name: 'Martes' },
-                { id: 'miercoles', name: 'Miércoles' }
-            ];
+        function getCurrentWeekKey() {
+            const now = new Date();
+            const onejan = new Date(now.getFullYear(), 0, 1);
+            const week = Math.ceil((((now - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+            return `${now.getFullYear()}-W${String(week).padStart(2, '0')}`;
+        }
 
-            daysList.forEach(dayObj => {
-                let dayHtml = `
-                    <div class="border border-slate-200 rounded-2xl p-5 bg-white shadow-sm flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-center mb-4">
-                                <span class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> ${dayObj.name}
-                                </span>
-                                <span class="text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 font-medium rounded-full">Variado</span>
+        const app = {
+            init() {
+                this.renderWizardCheckboxes();
+                this.updateWizardUI();
+                this.initWeekSelector();
+                this.loadFromStorage();
+            },
+
+            loadFromStorage() {
+                const saved = localStorage.getItem('menufacil_pro_state');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        appState = { ...appState, ...parsed };
+                        if (appState.weeklyPlans && Object.keys(appState.weeklyPlans).length > 0) {
+                            if (!appState.weeklyPlans[appState.currentWeekKey]) {
+                                // Buscar la semana más reciente con datos
+                                const keys = Object.keys(appState.weeklyPlans);
+                                appState.currentWeekKey = keys[keys.length - 1];
+                            }
+                            this.showResultsView();
+                            this.renderCurrentWeek();
+                        }
+                    } catch(e) { console.error(e); }
+                }
+                this.initWeekSelector();
+            },
+
+            saveToStorage() {
+                localStorage.setItem('menufacil_pro_state', JSON.stringify(appState));
+            },
+
+            renderWizardCheckboxes() {
+                // Supermercados
+                document.getElementById('config-supermarkets').innerHTML = SUPERMARKETS.map(s => `
+                    <div onclick="app.toggleSelection('supermarkets', '${s.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
+                        <span class="font-bold text-slate-800">${s.name}</span>
+                        <span class="text-xs text-slate-400 mt-1">Índice: ${s.priceIndex}</span>
+                    </div>
+                `).join('');
+
+                // Comidas
+                document.getElementById('config-meals').innerHTML = MEALS_LIST.map(m => `
+                    <div onclick="app.toggleSelection('selectedMeals', '${m.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex items-center space-x-3 transition-all">
+                        <i class="fa-solid ${m.icon} text-emerald-600 text-lg"></i>
+                        <span class="font-bold text-slate-800 text-sm">${m.name}</span>
+                    </div>
+                `).join('');
+
+                // Días
+                document.getElementById('config-days').innerHTML = DAYS_LIST.map(d => `
+                    <div onclick="app.toggleSelection('selectedDays', '${d.id}', this)" class="select-card rounded-2xl p-3 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
+                        <span class="font-bold text-slate-800 text-sm">${d.name}</span>
+                    </div>
+                `).join('');
+
+                // Estilos
+                document.getElementById('config-styles').innerHTML = STYLES_LIST.map(s => `
+                    <div onclick="app.toggleSelection('styles', '${s.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
+                        <span class="font-bold text-slate-800 text-sm">${s.name}</span>
+                    </div>
+                `).join('');
+
+                // Alergias
+                document.getElementById('config-allergies').innerHTML = ALLERGIES_LIST.map(a => `
+                    <div onclick="app.toggleSelection('allergies', '${a.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
+                        <span class="font-bold text-slate-800 text-sm">${a.name}</span>
+                    </div>
+                `).join('');
+
+                // Equipamiento
+                document.getElementById('config-equipment').innerHTML = EQUIPMENT_LIST.map(e => `
+                    <div onclick="app.toggleSelection('equipment', '${e.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
+                        <span class="font-bold text-slate-800 text-sm">${e.name}</span>
+                    </div>
+                `).join('');
+            },
+
+            toggleSelection(arrayKey, id, element) {
+                const idx = appState[arrayKey].indexOf(id);
+                if (idx > -1) {
+                    appState[arrayKey].splice(idx, 1);
+                    element.classList.remove('border-emerald-600', 'bg-emerald-50/70', 'shadow-sm');
+                    element.classList.add('border-slate-200', 'bg-slate-50');
+                } else {
+                    appState[arrayKey].push(id);
+                    element.classList.add('border-emerald-600', 'bg-emerald-50/70', 'shadow-sm');
+                    element.classList.remove('border-slate-200', 'bg-slate-50');
+                }
+            },
+
+            updatePeople(val) {
+                appState.people = parseInt(val);
+                document.getElementById('lbl-people').innerText = val;
+            },
+
+            updateBudget(val) {
+                appState.budget = parseInt(val);
+                document.getElementById('lbl-budget').innerText = val;
+            },
+
+            nextStep() {
+                if (currentStep === 1 && appState.supermarkets.length === 0) {
+                    alert('Por favor, selecciona al menos un supermercado.');
+                    return;
+                }
+                if (currentStep === 3 && (appState.selectedDays.length === 0 || appState.selectedMeals.length === 0)) {
+                    alert('Por favor, selecciona al menos un día y una comida.');
+                    return;
+                }
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    this.updateWizardUI();
+                }
+            },
+
+            prevStep() {
+                if (currentStep > 1) {
+                    currentStep--;
+                    this.updateWizardUI();
+                }
+            },
+
+            updateWizardUI() {
+                document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
+                document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.remove('hidden');
+                
+                document.getElementById('step-indicator').innerText = `Paso ${currentStep} de ${totalSteps}: ${stepNames[currentStep - 1]}`;
+                
+                const btnPrev = document.getElementById('btn-prev');
+                const btnNext = document.getElementById('btn-next');
+                const btnFinish = document.getElementById('btn-finish');
+
+                if (currentStep === 1) {
+                    btnPrev.classList.add('hidden');
+                } else {
+                    btnPrev.classList.remove('hidden');
+                }
+
+                if (currentStep === totalSteps) {
+                    btnNext.classList.add('hidden');
+                    btnFinish.classList.remove('hidden');
+                } else {
+                    btnNext.classList.remove('hidden');
+                    btnFinish.classList.add('hidden');
+                }
+            },
+
+            resetConfig() {
+                document.getElementById('view-results').classList.add('hidden');
+                document.getElementById('view-config').classList.remove('hidden');
+                currentStep = 1;
+                this.updateWizardUI();
+            },
+
+            initWeekSelector() {
+                const select = document.getElementById('select-week');
+                const current = getCurrentWeekKey();
+                
+                // Generar semanas (actual y 4 anteriores)
+                let options = '';
+                const now = new Date();
+                for (let i = 0; i < 5; i++) {
+                    const d = new Date(now.getTime() - i * 7 * 86400000);
+                    const onejan = new Date(d.getFullYear(), 0, 1);
+                    const weekNum = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+                    const wKey = `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+                    const label = i === 0 ? `Esta semana (${wKey})` : `Semana ${wKey}`;
+                    options += `<option value="${wKey}">${label}</option>`;
+                }
+                select.innerHTML = options;
+                select.value = appState.currentWeekKey;
+            },
+
+            changeWeek(wKey) {
+                appState.currentWeekKey = wKey;
+                if (appState.weeklyPlans[wKey]) {
+                    this.showResultsView();
+                    this.renderCurrentWeek();
+                } else {
+                    // Si no hay plan para esta semana, avisar limpiamente
+                    document.getElementById('menu-container').innerHTML = `
+                        <div class="bg-white rounded-2xl p-12 text-center border border-slate-200">
+                            <i class="fa-solid fa-calendar-xmark text-4xl text-slate-300 mb-3"></i>
+                            <h3 class="text-lg font-bold text-slate-700">Sin menús registrados para la semana ${wKey}</h3>
+                            <p class="text-sm text-slate-500 mt-1">No guardaste ningún plan para este periodo.</p>
+                        </div>
+                    `;
+                    document.getElementById('shopping-list-container').innerHTML = '<p class="text-sm text-slate-500 text-center py-6">No hay lista de compra para esta semana.</p>';
+                    document.getElementById('shopping-total-cost').innerText = "0.00 €";
+                    document.getElementById('shopping-budget-diff').innerText = "";
+                    document.getElementById('summary-budget-text').innerText = `0€ / ${appState.budget}€ máx`;
+                    document.getElementById('view-config').classList.add('hidden');
+                    document.getElementById('view-results').classList.remove('hidden');
+                }
+            },
+
+            generateMenu() {
+                const weekKey = appState.currentWeekKey;
+                
+                // Filtrar recetas según restricciones e historial de semanas pasadas
+                let availableRecipes = [...RECIPES_DB];
+                
+                // Recopilar recetas usadas en otras semanas para evitar repetición estricta
+                let usedRecipeIds = new Set();
+                Object.keys(appState.weeklyPlans).forEach(wk => {
+                    if (wk !== weekKey && appState.weeklyPlans[wk]) {
+                        Object.values(appState.weeklyPlans[wk].menu || {}).forEach(dayMeals => {
+                            Object.values(dayMeals).forEach(rec => { if (rec && rec.id) usedRecipeIds.add(rec.id); });
+                        });
+                    }
+                });
+
+                // Si hay suficientes recetas no usadas, priorizarlas
+                let freshRecipes = availableRecipes.filter(r => !usedRecipeIds.has(r.id));
+                if (freshRecipes.length < appState.selectedDays.length * appState.selectedMeals.length) {
+                    freshRecipes = availableRecipes; // fallback si faltan
+                }
+
+                // Generar asignación
+                let weekMenu = {};
+                let recipePoolIndex = 0;
+
+                appState.selectedDays.forEach(day => {
+                    weekMenu[day] = {};
+                    appState.selectedMeals.forEach(meal => {
+                        const mealFiltered = freshRecipes.filter(r => r.category === meal);
+                        const recipe = mealFiltered.length > 0 ? mealFiltered[recipePoolIndex % mealFiltered.length] : freshRecipes[0];
+                        recipePoolIndex++;
+                        weekMenu[day][meal] = { ...recipe };
+                    });
+                });
+
+                // Calcular costes y ajustar agresivamente al presupuesto máximo
+                let baseCost = this.calculateMenuCost(weekMenu, appState.people);
+                let targetBudget = appState.budget;
+                
+                // Factor de ajuste para acercarse al presupuesto máximo sin pasarse
+                let factor = 1.0;
+                if (baseCost > 0 && baseCost < targetBudget) {
+                    factor = targetBudget / baseCost;
+                    // Limitar factor para que no escale ingredientes de forma absurda (máx 1.8x)
+                    if (factor > 1.8) factor = 1.8;
+                } else if (baseCost > targetBudget) {
+                    factor = targetBudget / baseCost;
+                }
+                appState.budgetFactor = factor;
+
+                // Guardar en weeklyPlans
+                appState.weeklyPlans[weekKey] = {
+                    menu: weekMenu,
+                    budgetFactor: factor
+                };
+
+                this.saveToStorage();
+                this.showResultsView();
+                this.renderCurrentWeek();
+            },
+
+            regenerateCurrentMenu() {
+                delete appState.weeklyPlans[appState.currentWeekKey];
+                this.generateMenu();
+            },
+
+            showResultsView() {
+                document.getElementById('view-config').classList.add('hidden');
+                document.getElementById('view-results').classList.remove('hidden');
+            },
+
+            switchTab(tab) {
+                const menuTab = document.getElementById('tab-content-menu');
+                const shoppingTab = document.getElementById('tab-content-shopping');
+                const btnMenu = document.getElementById('tab-btn-menu');
+                const btnShopping = document.getElementById('tab-btn-shopping');
+
+                if (tab === 'menu') {
+                    menuTab.classList.remove('hidden');
+                    shoppingTab.classList.add('hidden');
+                    btnMenu.className = "px-4 py-2 rounded-lg text-sm font-bold transition-all bg-white text-slate-900 shadow-sm";
+                    btnShopping.className = "px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:text-slate-900";
+                } else {
+                    menuTab.classList.add('hidden');
+                    shoppingTab.classList.remove('hidden');
+                    btnShopping.className = "px-4 py-2 rounded-lg text-sm font-bold transition-all bg-white text-slate-900 shadow-sm";
+                    btnMenu.className = "px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:text-slate-900";
+                }
+            },
+
+            calculateMenuCost(menu, people) {
+                let total = 0;
+                const factor = appState.budgetFactor || 1.0;
+                Object.values(menu).forEach(dayMeals => {
+                    Object.values(dayMeals).forEach(recipe => {
+                        recipe.ingredients.forEach(ing => {
+                            let itemCost = (ing.baseQty * people * factor / 1000) * ing.pricePerKg;
+                            total += itemCost;
+                        });
+                    });
+                });
+                return total;
+            },
+
+            renderCurrentWeek() {
+                const plan = appState.weeklyPlans[appState.currentWeekKey];
+                if (!plan) return;
+
+                const menu = plan.menu;
+                const people = appState.people;
+                const factor = plan.budgetFactor || 1.0;
+
+                // Renderizar Menú Semanal
+                let menuHtml = '';
+                const dayNamesMap = { lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo' };
+
+                Object.keys(menu).forEach(day => {
+                    menuHtml += `
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="bg-slate-100 px-6 py-3 border-b border-slate-200 flex items-center justify-between">
+                                <h3 class="font-extrabold text-slate-900 text-base">${dayNamesMap[day] || day}</h3>
+                                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Variado y Nutritivo</span>
                             </div>
-                            <div class="space-y-4">
-                `;
-
-                appState.selectedMeals.forEach(mealType => {
-                    const mealList = RECIPES_DB[mealType] || RECIPES_DB.lunch;
-                    const recipe = mealList[0];
-                    const mealName = mealType === 'lunch' ? 'Comida (Mediodía)' : 'Cena';
-
-                    dayHtml += `
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                            <div class="flex justify-between items-center text-xs text-slate-500 mb-1">
-                                <span class="font-semibold text-amber-600"><i class="fa-solid fa-sun"></i> ${mealName}</span>
-                                <span><i class="fa-regular fa-clock"></i> ${recipe.time} min</span>
-                            </div>
-                            <h3 class="font-bold text-slate-800 text-sm mb-1">${recipe.name}</h3>
-                            <p class="text-xs text-slate-500 mb-3">${recipe.description}</p>
-                            <div class="border-t border-slate-200 pt-2 mt-2">
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Ingredientes principales:</p>
-                                <ul class="text-xs space-y-1 text-slate-600">
+                            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     `;
 
-                    recipe.ingredients.forEach(ing => {
-                        dayHtml += `<li class="flex justify-between"><span>• ${ing.name}</span><span class="font-medium text-slate-700">${ing.baseQty} ${ing.unit}</span></li>`;
+                    Object.keys(menu[day]).forEach(mealKey => {
+                        const recipe = menu[day][mealKey];
+                        const mealInfo = MEALS_LIST.find(m => m.id === mealKey) || { name: mealKey, icon: 'fa-utensils' };
+                        
+                        let recipeCost = 0;
+                        recipe.ingredients.forEach(i => {
+                            recipeCost += (i.baseQty * people * factor / 1000) * i.pricePerKg;
+                        });
+
+                        menuHtml += `
+                            <div class="border border-slate-200 rounded-2xl p-5 hover:border-emerald-500 transition-all flex flex-col justify-between bg-slate-50/50">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 flex items-center space-x-1.5">
+                                            <i class="fa-solid ${mealInfo.icon}"></i>
+                                            <span>${mealInfo.name}</span>
+                                        </span>
+                                        <span class="text-xs font-semibold bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg">
+                                            <i class="fa-regular fa-clock mr-1"></i>${recipe.time} min
+                                        </span>
+                                    </div>
+                                    <h4 class="font-bold text-slate-900 text-lg mb-1">${recipe.name}</h4>
+                                    <p class="text-xs text-slate-500 line-clamp-2 mb-4">${recipe.description}</p>
+                                </div>
+                                <div class="flex items-center justify-between pt-4 border-t border-slate-200 mt-2">
+                                    <span class="text-xs font-extrabold text-slate-700">Coste aprox: ${recipeCost.toFixed(2)} €</span>
+                                    <button onclick="app.openRecipeModal(${recipe.id}, '${day}', '${mealKey}')" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl transition-colors">
+                                        Ver receta completa <i class="fa-solid fa-arrow-right ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
                     });
 
-                    dayHtml += `
-                                </ul>
+                    menuHtml += `</div></div>`;
+                });
+
+                document.getElementById('menu-container').innerHTML = menuHtml;
+
+                // Calcular Lista de la Compra consolidada y comparativas
+                this.renderShoppingList(menu, people, factor);
+            },
+
+            renderShoppingList(menu, people, factor) {
+                let aggregated = {};
+
+                Object.values(menu).forEach(dayMeals => {
+                    Object.values(dayMeals).forEach(recipe => {
+                        recipe.ingredients.forEach(ing => {
+                            let qty = ing.baseQty * people * factor;
+                            let key = ing.name.toLowerCase();
+                            if (!aggregated[key]) {
+                                aggregated[key] = {
+                                    name: ing.name,
+                                    category: ing.category,
+                                    unit: ing.unit,
+                                    totalQty: 0,
+                                    basePricePerKg: ing.pricePerKg
+                                };
+                            }
+                            aggregated[key].totalQty += qty;
+                        });
+                    });
+                });
+
+                let totalCost = 0;
+                let listHtml = '';
+
+                // Supermercado principal seleccionado por el usuario (o el primero)
+                const selectedSuperIds = appState.supermarkets;
+                const primarySuperId = selectedSuperIds[0] || 'mercadona';
+                const primarySuper = SUPERMARKETS.find(s => s.id === primarySuperId) || SUPERMARKETS[0];
+
+                Object.values(aggregated).forEach(item => {
+                    let itemCost = (item.totalQty / (item.unit === 'g' || item.unit === 'ml' ? 1000 : 1)) * item.basePricePerKg * primarySuper.priceIndex;
+                    totalCost += itemCost;
+
+                    // Comparativa de precios con otros supermercados (incluso no seleccionados)
+                    let bestSuper = primarySuper;
+                    let lowestPrice = itemCost;
+
+                    SUPERMARKETS.forEach(sup => {
+                        let supCost = (item.totalQty / (item.unit === 'g' || item.unit === 'ml' ? 1000 : 1)) * item.basePricePerKg * sup.priceIndex;
+                        if (supCost < lowestPrice) {
+                            lowestPrice = supCost;
+                            bestSuper = sup;
+                        }
+                    });
+
+                    let diffText = "";
+                    if (bestSuper.id !== primarySuperId) {
+                        let diff = itemCost - lowestPrice;
+                        if (diff >= 0.05) {
+                            diffText = `<span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md mt-1 inline-block"><i class="fa-solid fa-piggy-bank mr-1"></i>El/La ${item.name} está ${diff.toFixed(2)}€ más barato en ${bestSuper.name}</span>`;
+                        }
+                    }
+
+                    let displayQty = item.unit === 'g' || item.unit === 'ml' ? 
+                        (item.totalQty >= 1000 ? (item.totalQty/1000).toFixed(2) + ' kg/L' : Math.round(item.totalQty) + ' ' + item.unit) :
+                        Math.ceil(item.totalQty) + ' ' + item.unit;
+
+                    listHtml += `
+                        <div class="py-4 flex items-center justify-between">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">${item.name}</h4>
+                                <span class="text-xs text-slate-400 uppercase tracking-wider">${item.category} • Cantidad: ${displayQty}</span>
+                                ${diffText}
+                            </div>
+                            <div class="text-right">
+                                <span class="font-extrabold text-slate-900 text-sm">${itemCost.toFixed(2)} €</span>
+                                <span class="text-xs text-slate-400 block">${primarySuper.name}</span>
                             </div>
                         </div>
                     `;
                 });
 
-                dayHtml += `
-                            </div>
+                document.getElementById('shopping-list-container').innerHTML = listHtml;
+                document.getElementById('shopping-total-cost').innerText = `${totalCost.toFixed(2)} €`;
+                
+                const budgetDiff = appState.budget - totalCost;
+                let diffBadgeText = budgetDiff >= 0 ? 
+                    `Te quedan ${budgetDiff.toFixed(2)} € de margen respecto a tu presupuesto máximo.` : 
+                    `Estás ligeramente por encima del límite presupuestario.`;
+                
+                document.getElementById('shopping-budget-diff').innerText = diffBadgeText;
+                document.getElementById('summary-budget-text').innerText = `${totalCost.toFixed(2)}€ / ${appState.budget}€ máx`;
+            },
+
+            openRecipeModal(recipeId, day, mealKey) {
+                const recipe = RECIPES_DB.find(r => r.id === recipeId);
+                if (!recipe) return;
+
+                const people = appState.people;
+                const factor = appState.budgetFactor || 1.0;
+
+                let ingredientsHtml = recipe.ingredients.map(ing => {
+                    let calculatedQty = ing.baseQty * people * factor;
+                    let displayQty = ing.unit === 'g' || ing.unit === 'ml' ? 
+                        (calculatedQty >= 1000 ? (calculatedQty/1000).toFixed(2) + ' kg/L' : Math.round(calculatedQty) + ' ' + ing.unit) :
+                        Math.ceil(calculatedQty) + ' ' + ing.unit;
+                    return `<li class="text-sm text-slate-700 py-1 flex justify-between border-b border-slate-100 last:border-0"><span>${ing.name}</span><span class="font-bold text-slate-900">${displayQty}</span></li>`;
+                }).join('');
+
+                let stepsHtml = recipe.steps.map((step, idx) => `
+                    <div class="flex space-x-3 items-start">
+                        <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">${idx + 1}</span>
+                        <p class="text-sm text-slate-700 leading-relaxed">${step}</p>
+                    </div>
+                `).join('');
+
+                const modalContent = `
+                    <div class="p-6 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider bg-black/20 px-2.5 py-1 rounded-full">${recipe.time} min • ${recipe.calories} kcal</span>
+                            <h3 class="text-2xl font-extrabold mt-2">${recipe.name}</h3>
+                        </div>
+                        <button onclick="app.closeRecipeModal()" class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <p class="text-sm text-slate-600 leading-relaxed">${recipe.description}</p>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm uppercase tracking-wider mb-3">Ingredientes (para ${people} comensales)</h4>
+                            <ul class="bg-slate-50 rounded-2xl p-4 border border-slate-200">${ingredientsHtml}</ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm uppercase tracking-wider mb-3">Pasos de preparación detallados</h4>
+                            <div class="space-y-3 bg-slate-50 rounded-2xl p-4 border border-slate-200">${stepsHtml}</div>
                         </div>
                     </div>
                 `;
-                grid.innerHTML += dayHtml;
-            });
-        }
 
-        document.addEventListener("DOMContentLoaded", renderMenuUI);
+                document.getElementById('recipe-modal-content').innerHTML = modalContent;
+                document.getElementById('recipe-modal').classList.remove('hidden');
+            },
+
+            closeRecipeModal() {
+                document.getElementById('recipe-modal').classList.add('hidden');
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
     </script>
 </body>
 </html>
