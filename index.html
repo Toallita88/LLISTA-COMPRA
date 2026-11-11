@@ -100,7 +100,7 @@
                     </div>
                 </div>
 
-                <!-- Paso 4: Estilos y Preferencias -->
+                <!-- Paso 4: Estilos y Restricciones (Inputs perfectamente alineados) -->
                 <div class="wizard-step hidden" data-step="4">
                     <h3 class="text-lg font-bold text-slate-900 mb-2">4. Estilos de Cocina y Restricciones</h3>
                     <p class="text-sm text-slate-500 mb-6">Filtra estilos y añade ingredientes obligatorios o vetados con alineación perfecta.</p>
@@ -285,7 +285,6 @@
             { id: 'airfryer', name: 'Airfryer' }
         ];
 
-        // Base de recetas principales variadas (Garantiza redondeo exacto de gramos)
         const RECIPES_DB = [
             {
                 id: 1, name: "Pechuga de pollo al limón con arroz basmati y brócoli", category: "lunch", styles: ["sano", "proteico", "express"], equipment: ["fuego"], time: 20, calories: 450,
@@ -409,7 +408,6 @@
             }
         ];
 
-        // Base de postres variados caseros rápidos
         const DESSERTS_DB = [
             {
                 id: 101, name: "Bizcocho de taza exprés al microondas", category: "dessert", time: 5, calories: 220,
@@ -576,7 +574,6 @@
             },
 
             renderWizardCheckboxes() {
-                // Supermercados (Sin la palabra "Índice")
                 document.getElementById('config-supermarkets').innerHTML = SUPERMARKETS.map(s => `
                     <div onclick="app.toggleSelection('supermarkets', '${s.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
                         <span class="font-bold text-slate-800">${s.name}</span>
@@ -584,7 +581,6 @@
                     </div>
                 `).join('');
 
-                // Comidas
                 document.getElementById('config-meals').innerHTML = MEALS_LIST.map(m => `
                     <div onclick="app.toggleSelection('selectedMeals', '${m.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex items-center space-x-3 transition-all">
                         <i class="fa-solid ${m.icon} text-emerald-600 text-lg"></i>
@@ -592,14 +588,12 @@
                     </div>
                 `).join('');
 
-                // Días
                 document.getElementById('config-days').innerHTML = DAYS_LIST.map(d => `
                     <div onclick="app.toggleSelection('selectedDays', '${d.id}', this)" class="select-card rounded-2xl p-3 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
                         <span class="font-bold text-slate-800 text-sm">${d.name}</span>
                     </div>
                 `).join('');
 
-                // Estilos
                 document.getElementById('config-styles').innerHTML = STYLES_LIST.map(s => `
                     <div onclick="app.toggleSelection('styles', '${s.id}', this)" class="select-card rounded-2xl p-4 border-2 border-slate-200 bg-slate-50 cursor-pointer flex flex-col items-center justify-center text-center transition-all">
                         <span class="font-bold text-slate-800 text-sm">${s.name}</span>
@@ -610,7 +604,6 @@
             },
 
             renderDynamicCheckboxes() {
-                // Alergias (Estándar + Personalizadas locales)
                 const allAllergies = [...DEFAULT_ALLERGIES, ...(appState.customAllergies || []).map(a => ({ id: a, name: a }))];
                 document.getElementById('config-allergies').innerHTML = allAllergies.map(a => `
                     <div onclick="app.toggleSelection('allergies', '${a.id}', this)" class="select-card rounded-2xl p-3 border-2 border-slate-200 bg-slate-50 cursor-pointer flex items-center justify-between transition-all">
@@ -618,7 +611,6 @@
                     </div>
                 `).join('');
 
-                // Equipamiento (Estándar + Personalizado local)
                 const allEquipment = [...DEFAULT_EQUIPMENT, ...(appState.customEquipment || []).map(e => ({ id: e, name: e }))];
                 document.getElementById('config-equipment').innerHTML = allEquipment.map(e => `
                     <div onclick="app.toggleSelection('equipment', '${e.id}', this)" class="select-card rounded-2xl p-3 border-2 border-slate-200 bg-slate-50 cursor-pointer flex items-center justify-between transition-all">
@@ -684,7 +676,6 @@
                 const mealsCount = appState.selectedMeals.length || 2;
                 const people = appState.people || 2;
                 
-                // Estimación de coste base mínimo aproximado
                 const minEstimated = daysCount * mealsCount * people * 1.8;
                 const warningBox = document.getElementById('budget-warning-box');
                 const warningText = document.getElementById('budget-warning-text');
@@ -710,7 +701,6 @@
                         this.showAlertModal('Por favor, selecciona al menos un día y una comida.');
                         return;
                     }
-                    // Validación bloqueante estricta de presupuesto mínimo
                     const daysCount = appState.selectedDays.length;
                     const mealsCount = appState.selectedMeals.length;
                     const people = appState.people;
@@ -813,13 +803,11 @@
             },
 
             generateMenu() {
-                // Capturar inputs obligatorios y prohibidos
                 appState.mandatory = document.getElementById('input-mandatory').value;
                 appState.forbidden = document.getElementById('input-forbidden').value;
 
                 const weekKey = appState.currentWeekKey;
                 
-                // Recopilar IDs usados en semanas ANTERIORES para variedad estricta inter-semanal
                 let usedRecipeIds = new Set();
                 let usedDessertIds = new Set();
                 Object.keys(appState.weeklyPlans).forEach(wk => {
@@ -832,9 +820,7 @@
                     }
                 });
 
-                // Filtrar prohibidos / obligatorios
                 const forbiddenWords = appState.forbidden.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
-                const mandatoryWords = appState.mandatory.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
 
                 let availableRecipes = RECIPES_DB.filter(r => {
                     const rText = (r.name + " " + r.description + " " + r.ingredients.map(i => i.name).join(" ")).toLowerCase();
@@ -855,12 +841,10 @@
                 if (availableRecipes.length === 0) availableRecipes = RECIPES_DB;
                 if (availableDesserts.length === 0) availableDesserts = DESSERTS_DB;
 
-                // Generar asignación garantizando 100% sin repetir platos ni postres dentro de la misma semana
                 let weekMenu = {};
                 let recipePoolIndex = 0;
                 let dessertPoolIndex = 0;
 
-                // Mezclar aleatoriamente para variedad
                 let shuffledRecipes = [...availableRecipes].sort(() => Math.random() - 0.5);
                 let shuffledDesserts = [...availableDesserts].sort(() => Math.random() - 0.5);
 
@@ -879,7 +863,6 @@
                     }
                 });
 
-                // Control estricto de presupuesto máximo
                 let baseCost = this.calculateMenuCost(weekMenu, appState.people);
                 let targetBudget = appState.budget;
                 let factor = 1.0;
@@ -887,13 +870,11 @@
                 if (baseCost > targetBudget) {
                     factor = targetBudget / baseCost;
                 } else if (baseCost > 0 && baseCost < targetBudget) {
-                    // Ajuste inteligente para apurar el presupuesto sin rebasarlo
                     factor = targetBudget / baseCost;
                     if (factor > 1.5) factor = 1.5;
                 }
                 appState.budgetFactor = factor;
 
-                // Verificar coste final tras factor
                 let finalCost = this.calculateMenuCost(weekMenu, appState.people);
                 if (finalCost > targetBudget) {
                     appState.budgetFactor = targetBudget / baseCost;
@@ -1037,7 +1018,7 @@
                             if (!ing.isPackage) {
                                 aggregated[key].totalQty += Math.round(ing.baseQty * people * factor);
                             } else {
-                                aggregated[key].totalQty += 1; // Paquete lógico entero
+                                aggregated[key].totalQty += 1;
                             }
                         });
                     });
@@ -1055,7 +1036,6 @@
                     
                     totalCost += itemCost;
 
-                    // Comparativa de ahorro con otros supermercados
                     let bestSuper = primarySuper;
                     let lowestPrice = itemCost;
 
@@ -1109,7 +1089,6 @@
             },
 
             openRecipeModal(recipeId, day, mealKey) {
-                // Buscar en recetas principales o en postres
                 let recipe = RECIPES_DB.find(r => r.id === recipeId) || DESSERTS_DB.find(d => d.id === recipeId);
                 if (!recipe) return;
 
